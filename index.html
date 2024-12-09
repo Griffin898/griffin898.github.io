@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Performance duo!</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+
+    <style>
+        *{
+            padding: 0;
+            margin: 0;
+            border: none;
+            outline: none;
+            font-family: "Exo 2", sans-serif;
+            font-optical-sizing: auto;
+            user-select: none;
+        }
+
+
+        body{
+            background-color: #fbfdfc;
+        }
+
+        main{
+            display: flex;
+            flex-direction: column;
+            max-width: 320px;
+            margin: 30px auto;
+            gap: 0.5rem;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #clock{
+            font-size: 3.5rem;
+        }
+
+        .img-box{
+            max-width: 320px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .img-box img{
+            width: 100%;
+            height: 100%;
+        }
+        
+        .img-box img:active{
+            width: 90%;
+            height: 90%;
+        }
+
+        .goto-box{
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(2, 1fr);    
+            gap: 15px; 
+            justify-content: center;
+            align-items: center;
+            margin: 10%;
+        }
+
+        .link-box{
+            width: 90px;
+            height: 90px;
+            border-radius: 15px;
+        }
+
+        .link-box img{
+            width: 100%;
+            height: 100%;
+            border-radius: 15px;
+        }
+
+        .header{
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo-box img{
+            width: 60px;
+            height: 60px;
+        }
+
+    </style>
+</head>
+<body>
+    <main>
+        <div class="header">
+            <div class="logo-box">
+                <img src="assets/logo.png" alt="">
+            </div>
+            <div class="time-box">
+                <p id="clock"></p>
+            </div>
+        </div>
+        <div class="img-box">
+            <img src="assets/64d58b037a8c7f81338494a49ede2975.jpg" alt="pix">
+        </div>
+        <div class="goto-box">
+            <div class="link-box"><a href="cart.html"><img src="assets/home.png" alt=""></a></div>
+            <div class="link-box"><a href="error.html"><img src="assets/pet.png" alt=""></a></div>
+            <div class="link-box"><a href="error.html"><img src="assets/schedule.png" alt=""></a></div>
+            <div class="link-box"><a href="error.html"><img src="assets/etc.png" alt=""></a></div>
+        </div>
+        <div class="footer"></div>
+    </main>
+</body>
+
+<script>
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            
+            const timeString = `${hours}:${minutes}:${seconds}`;
+            document.getElementById('clock').textContent = timeString;
+        }
+
+        setInterval(updateClock, 1000);
+        updateClock(); 
+</script>
+</html>
