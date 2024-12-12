@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Performance duo!</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,100..900;1,100..900&display=swap"
+    rel="stylesheet">
+
+  <style>
+    * {
+      padding: 0;
+      margin: 0;
+      border: none;
+      outline: none;
+      font-family: "Exo 2", sans-serif;
+      font-optical-sizing: auto;
+      user-select: none;
+      color: #eee;
+    }
+
+
+    body {
+      background-color: #121212;
+    }
+
+    main {
+      display: flex;
+      flex-direction: column;
+      max-width: 320px;
+      margin: 30px auto;
+      gap: 0.5rem;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #cnv {
+      position: absolute;
+      z-index: -10;
+      min-width: 320px;
+      width: 100vw;
+      height: 200%;
+    }
+
+    .header, .title{
+      text-align: l;
+      width: 90%;
+      padding: 5%;
+      background-color: rgba(75, 74, 74, 0.7);
+    }
+
+    .content-box{
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      width: 90%;
+    }
+
+    .content-box img{
+      width: 100%;
+      animation: aura 4s ease-in-out infinite;
+    }
+
+    .text{
+      padding: 5%;
+      background-color: rgba(75, 74, 74, 0.7);
+      font-size: 20px;
+    }
+
+    .img-box{
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .img-box img{
+      width: 70%;
+      animation: float 6s ease-in-out infinite;
+      padding: 2%;
+    }
+
+    @keyframes float {
+      0% {
+        filter: drop-shadow(0 0 0.75rem purple);
+        transform: translatey(0px);
+      }
+
+      50% {
+        filter: drop-shadow(0 0 0.75rem violet);
+        transform: translatey(-10px);
+        
+      }
+
+      100% {
+        filter: drop-shadow(0 0 0.75rem pink);
+        transform: translatey(0px);
+      }
+    }
+
+    @keyframes aura {
+      0% {
+        filter: drop-shadow(0 0 0.75rem rgb(244, 240, 244));
+      }
+
+      50% {
+        filter: drop-shadow(0 0 0.75rem rgb(103, 102, 103));
+        
+      }
+
+      100% {
+        filter: drop-shadow(0 0 0.75rem rgb(47, 47, 47));
+      }
+    }
+    .blank{
+      margin-top: 20%;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="cnv"></canvas>
+  <main>
+    <div class="header">
+      <h2>Sto Uderzeń Serca - Nasze Pierwsze Sto dni!</h2>
+    </div>
+    <div class="img-box">
+      <img src="assets/party-kuro.png" alt="">
+    </div>
+    <div class="content-box">
+      <div class="title">
+        <h2>Hiya Kroliczku!</h2>
+      </div>
+      <div class="text">
+        Jejku Bombelku to juz 100 dni! Dziekuje Ci za ten caly czas, kazdy dzien z toba byl naprawde niesamowity i nie zaluje ani jednego z nich!  
+      </div>
+    </div>
+    <div class="content-box">
+      <img src="assets/1.png" alt="">
+    </div>
+    <div class="blank"></div>
+    <div class="content-box">
+      <div class="title">
+        <h2>Tak Malo a tak wiele.</h2>
+      </div>
+      <div class="text">
+        To niesamowite jak wiele przeszlismy, jak wiele osiagnelismy w tak krotkim czasie Kruszynko! A wszystko dopiero przed nami prawda? To dopiero poczatek naszej pieknej przygody Malutka!
+      </div>
+    </div>
+    <div class="blank"></div>
+    <div class="content-box">
+      <div class="title">
+        <h2>I Love You Cutie!</h2>
+      </div>
+      <div class="text">
+        Kocham Cie Julia! Jestes bylas i zawsze bedziesz jedyna osoba ktora ma mniejsce w moim serduszku! Tylko ciebie chce w moim zyciu nikogo wiecej, caly ten swiat to tylko Ja i Ty Malutka! I pamietaj o nic sie nie martw Konras zawsze dla ciebie byl, jest i bedzie! Wiec jest nam pisane nic innego jak dlugie przepelnione szczesciem zycko prawda Mala? ^^
+      </div>
+    </div>
+    <div class="content-box">
+      <img src="assets/2.jpg" alt="">
+    </div>
+    <div class="blank"></div>
+    <div class="content-box">
+      <div class="title"><h2>I need You!</h2></div>
+      <div class="text">
+        Cutie po tym calym przepieknie spedzonym razem czasie nie wyobrazam sobie mojego zycia inaczej niz wlasnie z toba Julia. Jestes dla Konras jak tlen, od ktorego jest uzalezniony i bez niego nie moze istniec! Wiec prosze zechciej byc czescia mojego zycia juz zawsze! Pozwol mi zlapac tego pokemona nie do pokeballa, lecz tymrazem uwiazac go obraczka! Jesli milosc istnieje to jest to wlasnie relacja miedzy nami Cutie ^^ I wiesz co? Ja w nas wierze, osiagniemy razem kazdy postawiony sobie cel! Bo wkoncu jestesmy Konras and Jully!
+      </div>
+    </div>
+    <div class="content-box">
+      <img src="assets/3.jpg" alt="">
+    </div>
+    <div class="blank"></div>
+    <div class="content-box">
+      <div class="title"><h2>Konras and Jully</h2></div>
+      <div class="text">Till the end - Forever!
+        Na zawsze razem nigdy nie rozlaczni!
+        Na dobre i na zle! Razem!
+      </div>
+    </div>
+  </main>
+</body>
+<script src="assets/js/bg.js"></script>
+
+</html>
