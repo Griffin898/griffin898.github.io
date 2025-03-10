@@ -10,7 +10,7 @@
 
 .darkmode {
     --text: #fff;
-    --background: hsl(0, 0%, 2%);
+    --background: #000;
     --primary: #675aa0;
     --secondary: hsl(161, 69%, 10%);
     --accent: #5c1fa0;
