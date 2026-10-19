@@ -1,0 +1,928 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f6e7ee" />
+    <title>Składanka dla Króliczka</title>
+    <link rel="icon" href="./favicon.ico" />
+    <style>
+      :root { color: #5a3928; font-family: "Segoe UI", "Nunito", sans-serif; }
+      * { box-sizing: border-box; }
+      body { margin: 0; min-height: 100vh; background: #f3d5e4; }
+      button, a { font-family: inherit; }
+      button:focus-visible, a:focus-visible { outline: 3px solid #ffe7a3; outline-offset: 2px; }
+      .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+      .garden {
+        min-height: 100vh; position: relative;
+        background:
+          radial-gradient(circle at 0 0, #ffe4f0 0, transparent 34%),
+          radial-gradient(circle at 100% 100%, #f0c6df 0, transparent 38%),
+          #f7e7ef;
+      }
+      .vine { position: fixed; top: 0; height: 100%; width: min(140px, 16vw); pointer-events: none; z-index: 0; }
+      .vine.left { left: 0; }
+      .vine.right { right: 0; }
+      .table { position: relative; z-index: 1; width: min(1040px, calc(100% - 16px)); margin: 0 auto; padding: 10px 0 16px; }
+      .hud { display: grid; grid-template-columns: 64px 1fr 64px; gap: 8px; align-items: center; margin-bottom: 8px; }
+      .hud-badge, .dock-round, .trash, .degrees, .producer {
+        border: none; cursor: pointer;
+        background: linear-gradient(#fffaf3, #f3ddc0);
+        box-shadow: 0 4px 0 #d7b48a, 0 8px 16px rgba(90, 57, 40, 0.12);
+      }
+      .hud-badge { width: 58px; height: 58px; border-radius: 18px; position: relative; padding: 6px; }
+      .hud-badge svg, .dock-round svg, .trash svg { width: 100%; height: 100%; }
+      .hud-badge i, .producer em {
+        position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; border-radius: 999px;
+        background: #e23b4a; color: white; font-size: 0.72rem; font-style: normal; font-weight: 800;
+        display: grid; place-items: center; padding: 0 4px;
+      }
+      .meters { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+      .meter {
+        display: flex; align-items: center; gap: 6px; min-width: 132px;
+        background: linear-gradient(#fff, #fff6ea); border-radius: 999px; padding: 4px 4px 4px 8px;
+        box-shadow: 0 3px 0 #e6cba6, inset 0 0 0 2px #fff;
+      }
+      .meter-icon { width: 28px; height: 28px; flex: none; display: grid; }
+      .meter-icon svg { width: 100%; height: 100%; }
+      .meter strong { display: block; font-size: 1rem; line-height: 1; }
+      .meter small { display: block; color: #a56b32; font-size: 0.68rem; font-weight: 800; }
+      .meter button {
+        margin-left: auto; width: 26px; height: 26px; border: none; border-radius: 50%;
+        background: #7dce55; color: white; font-weight: 800; cursor: pointer; box-shadow: 0 2px 0 #4e9a32;
+      }
+      .playfield { display: grid; gap: 8px; }
+      .orders { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; }
+      .claim {
+        flex: 0 0 auto; border: none; border-radius: 16px; background: #fff4d6; color: #8a5a20;
+        font-weight: 800; padding: 8px 10px; box-shadow: 0 3px 0 #e6c98a; cursor: pointer;
+      }
+      .claim:disabled { opacity: 0.7; cursor: default; }
+      .order {
+        position: relative; flex: 0 0 168px; display: flex; gap: 6px; text-align: left; border: none;
+        border-radius: 18px; padding: 8px; background: linear-gradient(#fffaf4, #f8e7d2);
+        box-shadow: 0 4px 0 #e2c3a2; color: inherit; cursor: pointer;
+      }
+      .order:disabled { cursor: default; }
+      .order.ready { box-shadow: 0 0 0 3px #7dce55, 0 4px 0 #5eae3e; }
+      .who { width: 46px; height: 46px; flex: none; }
+      .who svg, .item svg, .ghost svg, .info .item svg { width: 100%; height: 100%; display: block; }
+      .order-body { min-width: 0; display: grid; gap: 2px; }
+      .order-body strong { font-size: 0.82rem; }
+      .needs { display: flex; gap: 4px; }
+      .need { display: grid; justify-items: center; }
+      .need .item { width: 28px; height: 28px; }
+      .need em { font-style: normal; font-size: 0.68rem; font-weight: 800; color: #a56b32; }
+      .pay { font-size: 0.78rem; font-weight: 800; color: #c98416; }
+      .pay::before { content: "● "; }
+      .done-flag {
+        position: absolute; left: 8px; right: 8px; bottom: 8px; background: #67c24a; color: white;
+        font-weight: 800; text-align: center; border-radius: 8px; font-size: 0.72rem; letter-spacing: 0.04em;
+      }
+      .board-stack { min-width: 0; display: grid; gap: 8px; }
+      .producers { display: flex; gap: 8px; }
+      .producer {
+        flex: 1; min-height: 64px; border-radius: 16px; display: grid;
+        grid-template-columns: 42px 1fr; grid-template-rows: auto auto; column-gap: 6px;
+        align-items: center; padding: 6px 8px; text-align: left; color: inherit; position: relative;
+      }
+      .producer .item { grid-row: 1 / span 2; width: 42px; height: 42px; }
+      .producer strong { font-size: 0.9rem; }
+      .producer em { position: static; background: transparent; color: #8a5a20; font-weight: 800; min-width: 0; height: auto; padding: 0; justify-self: start; }
+      .producer.resting { opacity: 0.7; }
+      .producer.kwiaty { background: linear-gradient(#fff0f5, #ffd6e4); }
+      .producer.slodkosci { background: linear-gradient(#fff8ea, #ffe0b5); }
+      .producer.listy { background: linear-gradient(#f7f1ff, #e4d6ff); }
+      .play { min-width: 0; }
+      .board {
+        display: grid; gap: 4px; padding: 10px; border-radius: 26px;
+        background: linear-gradient(#ffd6e6, #f3b4cf);
+        box-shadow: inset 0 0 0 4px #fff7fb, 0 8px 0 #e7a3bf; touch-action: none;
+      }
+      .cell {
+        aspect-ratio: 1; border: none; border-radius: 12px; padding: 2px; position: relative;
+        background: linear-gradient(#fffaf3, #f4e2cb); box-shadow: inset 0 -3px 0 rgba(176, 122, 70, 0.18); color: inherit;
+      }
+      .cell.filled { cursor: pointer; }
+      .cell .item { width: 92%; height: 92%; margin: 0 auto; }
+      .cell i {
+        position: absolute; right: 2px; bottom: 1px; min-width: 14px; height: 14px; border-radius: 999px;
+        background: rgba(255, 250, 243, 0.9); font-style: normal; font-size: 0.62rem; font-weight: 800; line-height: 14px; color: #8a5a20;
+      }
+      .cell.selected { box-shadow: inset 0 0 0 3px #3ea83a, inset 0 0 0 6px #d9f5c8; background: #e7f8dc; }
+      .cell.mergeable { box-shadow: inset 0 0 0 3px #7dce55; background: #f3ffe8; }
+      .cell.craftable { box-shadow: inset 0 0 0 3px #e85a84; background: #fff0f6; }
+      .cell.needed i { background: #ffe7a3; }
+      .cell.locked {
+        background: linear-gradient(135deg, #d8c3a5 25%, transparent 25%), linear-gradient(225deg, #c9b08d 25%, transparent 25%), #e7d3b4;
+        background-size: 12px 12px; box-shadow: inset 0 0 0 2px #c4a57c; cursor: pointer;
+      }
+      .cell.pop .item { animation: pop 0.35s ease; }
+      .dock { display: grid; grid-template-columns: 52px 1fr 52px 74px; gap: 8px; align-items: center; }
+      .dock-round, .trash { width: 52px; height: 52px; border-radius: 16px; padding: 8px; }
+      .trash { background: linear-gradient(#ff8d8d, #e85a6a); }
+      .trash:disabled { opacity: 0.45; cursor: default; }
+      .info {
+        min-height: 58px; border-radius: 18px; background: linear-gradient(#fffaf3, #f7e6d0);
+        box-shadow: 0 4px 0 #e2c3a2; display: flex; gap: 8px; align-items: center; padding: 6px 10px;
+      }
+      .info .item, .info-mark { width: 42px; height: 42px; flex: none; }
+      .info-mark { display: grid; place-items: center; border-radius: 50%; background: #7dce55; color: white; font-weight: 800; font-size: 1.3rem; }
+      .info strong, .info span { display: block; }
+      .info span { color: #8a5a20; font-size: 0.78rem; }
+      .degrees { height: 52px; border-radius: 16px; position: relative; overflow: hidden; color: #6a3e22; }
+      .degrees span, .degrees strong { position: relative; z-index: 1; display: block; }
+      .degrees strong { font-size: 1.1rem; }
+      .degrees i { position: absolute; left: 0; bottom: 0; height: 5px; background: #e85a84; }
+      .links { display: flex; justify-content: center; gap: 8px; margin-top: 8px; }
+      .links a { color: #2f5d34; background: rgba(255, 255, 255, 0.55); text-decoration: none; font-weight: 800; font-size: 0.82rem; border-radius: 999px; padding: 6px 10px; }
+      .ghost { position: fixed; width: 54px; height: 54px; margin: -27px 0 0 -27px; pointer-events: none; z-index: 20; filter: drop-shadow(0 8px 8px rgba(90, 57, 40, 0.25)); }
+      .toast {
+        position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); width: min(420px, calc(100% - 24px));
+        background: #5a3928; color: white; border-radius: 16px; padding: 12px 14px; text-align: center; font-weight: 800; z-index: 40;
+      }
+      .toast[hidden] { display: none; }
+      .mask { position: fixed; inset: 0; background: rgba(47, 77, 42, 0.45); display: flex; align-items: flex-end; justify-content: center; z-index: 30; padding: 12px; }
+      .sheet { width: min(520px, 100%); max-height: min(82vh, 720px); overflow: auto; border-radius: 28px; padding: 16px; background: #fffaf3; box-shadow: 0 16px 40px rgba(47, 77, 42, 0.25); }
+      .sheet h2 { margin: 0; font-family: "Segoe Script", "Comic Sans MS", cursive; font-size: 2.2rem; }
+      .sheet > p { color: #8a5a20; }
+      .offers { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+      .offers li { display: flex; gap: 8px; align-items: center; justify-content: space-between; background: white; border-radius: 16px; padding: 8px; }
+      .offers strong, .offers span { display: block; }
+      .offers span { color: #8a5a20; font-size: 0.82rem; }
+      .offers button, .close { border: none; border-radius: 999px; background: linear-gradient(#8ed86a, #5eae3e); color: white; font-weight: 800; padding: 8px 12px; cursor: pointer; }
+      .close { width: 100%; margin-top: 8px; padding: 12px; }
+      .quiet { background: #eadfce; color: #6a3e22; }
+      .offers button:disabled { background: #eadfce; color: #a08a74; cursor: default; }
+      @keyframes pop { 0% { transform: scale(0.4); } 70% { transform: scale(1.12); } 100% { transform: scale(1); } }
+      @media (min-width: 860px) {
+        .garden { height: 100vh; overflow: hidden; }
+        .table { height: 100vh; display: flex; flex-direction: column; padding-bottom: 8px; }
+        .playfield { flex: 1; min-height: 0; grid-template-columns: 220px minmax(0, 1fr); align-items: stretch; }
+        .orders { flex-direction: column; overflow: auto; }
+        .order { flex: none; }
+        .claim { width: 100%; }
+        .board-stack { min-height: 0; height: 100%; grid-template-rows: auto minmax(0, 1fr) auto; }
+        .play { min-height: 0; height: 100%; }
+        .board { height: 100%; }
+        .cell { aspect-ratio: auto; min-height: 0; }
+        .links a.home { background: #fff; color: #c43b68; }
+        .mask { align-items: center; }
+      }
+      @media (max-width: 420px) {
+        .hud { grid-template-columns: 48px 1fr 48px; }
+        .hud-badge { width: 48px; height: 48px; }
+        .meter { min-width: 0; flex: 1; }
+        .vine { display: none; }
+      }
+      @media (prefers-reduced-motion: reduce) { .cell.pop .item { animation: none; } }
+    </style>
+  </head>
+  <body>
+    <div class="garden">
+      <svg class="vine left" viewBox="0 0 180 900" aria-hidden="true">
+        <path d="M20 0c40 80 10 140 50 200s-10 120 30 190 0 150 40 220-20 160 10 290" stroke="#2f7a3a" stroke-width="14" fill="none" />
+        <g fill="#3f9a4c">
+          <ellipse cx="70" cy="120" rx="28" ry="14" transform="rotate(-30 70 120)" />
+          <ellipse cx="48" cy="250" rx="30" ry="14" transform="rotate(20 48 250)" />
+          <ellipse cx="90" cy="400" rx="32" ry="15" transform="rotate(-20 90 400)" />
+          <ellipse cx="60" cy="560" rx="30" ry="14" transform="rotate(25 60 560)" />
+          <ellipse cx="96" cy="730" rx="28" ry="14" transform="rotate(-15 96 730)" />
+        </g>
+        <g fill="#f26d92">
+          <circle cx="100" cy="180" r="12" /><circle cx="40" cy="340" r="10" />
+          <circle cx="110" cy="500" r="13" /><circle cx="52" cy="680" r="11" />
+        </g>
+      </svg>
+      <svg class="vine right" viewBox="0 0 180 900" aria-hidden="true">
+        <path d="M160 0c-40 80-10 140-50 200s10 120-30 190 0 150-40 220 20 160-10 290" stroke="#2f7a3a" stroke-width="14" fill="none" />
+        <g fill="#3f9a4c">
+          <ellipse cx="110" cy="140" rx="28" ry="14" transform="rotate(30 110 140)" />
+          <ellipse cx="132" cy="280" rx="30" ry="14" transform="rotate(-20 132 280)" />
+          <ellipse cx="90" cy="430" rx="32" ry="15" transform="rotate(18 90 430)" />
+          <ellipse cx="120" cy="600" rx="30" ry="14" transform="rotate(-24 120 600)" />
+          <ellipse cx="84" cy="760" rx="28" ry="14" transform="rotate(16 84 760)" />
+        </g>
+        <g fill="#ffb3c7">
+          <circle cx="80" cy="200" r="12" /><circle cx="140" cy="360" r="10" />
+          <circle cx="70" cy="520" r="13" /><circle cx="128" cy="700" r="11" />
+        </g>
+      </svg>
+      <main class="table" id="app"></main>
+    </div>
+    <div id="toast" class="toast" role="status" hidden></div>
+    <div id="shop"></div>
+    <div id="ghost"></div>
+    <script>
+      const SAVE_KEY = "kroliczek-merge-v2";
+      const MAX_ENERGY = 50;
+      const REGEN_MS = 120000;
+      const BASE_COLS = 7;
+      const BASE_ROWS = 9;
+      const MAX_ROWS = 12;
+      const MAX_SPEED = 4;
+      const MAX_CAPACITY = 4;
+      const ENERGY_REFILL_COST = 20;
+      const ITEMS = [
+        { id: "kwiat_1", chain: "kwiaty", level: 1, sellValue: 1, name: "Płatek" },
+        { id: "kwiat_2", chain: "kwiaty", level: 2, sellValue: 2, name: "Pąk" },
+        { id: "kwiat_3", chain: "kwiaty", level: 3, sellValue: 5, name: "Różyczka" },
+        { id: "kwiat_4", chain: "kwiaty", level: 4, sellValue: 12, name: "Bukiecik" },
+        { id: "kwiat_5", chain: "kwiaty", level: 5, sellValue: 28, name: "Wianek" },
+        { id: "kwiat_6", chain: "kwiaty", level: 6, sellValue: 60, name: "Ogród serca" },
+        { id: "slodkosc_1", chain: "slodkosci", level: 1, sellValue: 1, name: "Jagódka" },
+        { id: "slodkosc_2", chain: "slodkosci", level: 2, sellValue: 2, name: "Krem" },
+        { id: "slodkosc_3", chain: "slodkosci", level: 3, sellValue: 5, name: "Ciasteczko" },
+        { id: "slodkosc_4", chain: "slodkosci", level: 4, sellValue: 12, name: "Tort" },
+        { id: "slodkosc_5", chain: "slodkosci", level: 5, sellValue: 28, name: "Słodka uczta" },
+        { id: "slodkosc_6", chain: "slodkosci", level: 6, sellValue: 60, name: "Wieczór we dwoje" },
+        { id: "list_1", chain: "listy", level: 1, sellValue: 1, name: "Karteczka" },
+        { id: "list_2", chain: "listy", level: 2, sellValue: 2, name: "Liścik" },
+        { id: "list_3", chain: "listy", level: 3, sellValue: 5, name: "Koperta" },
+        { id: "list_4", chain: "listy", level: 4, sellValue: 12, name: "List miłosny" },
+        { id: "list_5", chain: "listy", level: 5, sellValue: 28, name: "Wyznanie" },
+        { id: "list_6", chain: "listy", level: 6, sellValue: 60, name: "Na zawsze" },
+        { id: "randka_1", chain: "randka", level: 1, sellValue: 4, name: "Podwieczorek" },
+        { id: "randka_2", chain: "randka", level: 2, sellValue: 8, name: "Spacer" },
+        { id: "randka_3", chain: "randka", level: 3, sellValue: 16, name: "Seans" },
+        { id: "randka_4", chain: "randka", level: 4, sellValue: 32, name: "Kolacja" },
+        { id: "randka_5", chain: "randka", level: 5, sellValue: 60, name: "Taniec" },
+        { id: "randka_6", chain: "randka", level: 6, sellValue: 120, name: "Nasza noc" },
+        { id: "obietnica_1", chain: "obietnica", level: 1, sellValue: 4, name: "Karnecik" },
+        { id: "obietnica_2", chain: "obietnica", level: 2, sellValue: 8, name: "Zdjęcie" },
+        { id: "obietnica_3", chain: "obietnica", level: 3, sellValue: 16, name: "Piosenka" },
+        { id: "obietnica_4", chain: "obietnica", level: 4, sellValue: 32, name: "Kluczyk" },
+        { id: "obietnica_5", chain: "obietnica", level: 5, sellValue: 60, name: "Pierścionek" },
+        { id: "obietnica_6", chain: "obietnica", level: 6, sellValue: 120, name: "Przysięga" },
+        { id: "dom_1", chain: "dom", level: 1, sellValue: 4, name: "Herbata" },
+        { id: "dom_2", chain: "dom", level: 2, sellValue: 8, name: "Koc" },
+        { id: "dom_3", chain: "dom", level: 3, sellValue: 16, name: "Poduszka" },
+        { id: "dom_4", chain: "dom", level: 4, sellValue: 32, name: "Śniadanie" },
+        { id: "dom_5", chain: "dom", level: 5, sellValue: 60, name: "Mieszkanie" },
+        { id: "dom_6", chain: "dom", level: 6, sellValue: 120, name: "Nasz kąt" }
+      ];
+      const GENERATORS = [
+        { id: "gen_kwiaty", chain: "kwiaty", energyCost: 1, spawnLevel: 1, cooldownSeconds: 24, maxCharges: 5, name: "Donica", blurb: "Płatki tylko dla niej" },
+        { id: "gen_slodkosci", chain: "slodkosci", energyCost: 1, spawnLevel: 1, cooldownSeconds: 28, maxCharges: 4, name: "Kuchnia", blurb: "Coś słodkiego na potem" },
+        { id: "gen_listy", chain: "listy", energyCost: 1, spawnLevel: 1, cooldownSeconds: 26, maxCharges: 5, name: "Biurko", blurb: "Słowa, które zostają" }
+      ];
+      const ORDERS = [
+        { id: "pak-na-dzien-dobry", npc: "Króliczek", portrait: "kroliczek", line: "Dwa płatki. Jeszcze nic z nich nie rób, chcę je takie małe.", minLevel: 1, starter: true, requirements: [{ itemId: "kwiat_1", count: 2 }], rewardCoins: 6, rewardEnergy: 2, rewardXp: 5 },
+        { id: "jagodki-do-herbaty", npc: "Konras", portrait: "konras", line: "Dwie jagódki. Zaniosę je Julii, zanim sam je zjem.", minLevel: 1, starter: true, requirements: [{ itemId: "slodkosc_1", count: 2 }], rewardCoins: 6, rewardEnergy: 2, rewardXp: 5 },
+        { id: "dwie-karteczki", npc: "Gwiazdka", portrait: "gwiazdka", line: "Dwie karteczki na niebo. Przypnę je nad waszym dniem.", minLevel: 1, starter: true, requirements: [{ itemId: "list_1", count: 2 }], rewardCoins: 6, rewardEnergy: 2, rewardXp: 5 },
+        { id: "pak-i-platek", npc: "Króliczek", portrait: "kroliczek", line: "Pąk i jeszcze jeden płatek. Jak my: jedno już nasze, drugie dopiero się otwiera.", minLevel: 1, requirements: [{ itemId: "kwiat_2", count: 1 }, { itemId: "kwiat_1", count: 1 }], rewardCoins: 10, rewardEnergy: 3, rewardXp: 8 },
+        { id: "dwa-kremy", npc: "Konras", portrait: "konras", line: "Dwa kremy. Jeden na palec, drugi naprawdę do ciasta.", minLevel: 1, requirements: [{ itemId: "slodkosc_2", count: 2 }], rewardCoins: 12, rewardEnergy: 2, rewardXp: 8 },
+        { id: "liscik", npc: "Gwiazdka", portrait: "gwiazdka", line: "Jeden liścik. Krótki. Byle było w nim jej imię.", minLevel: 1, requirements: [{ itemId: "list_2", count: 1 }], rewardCoins: 8, rewardEnergy: 2, rewardXp: 7 },
+        { id: "roza-i-liscik", npc: "Króliczek", portrait: "kroliczek", line: "Różyczka i liścik. Kwiat bez słowa jest tylko ładny. Ja chcę oba.", minLevel: 2, requirements: [{ itemId: "kwiat_3", count: 1 }, { itemId: "list_2", count: 1 }], rewardCoins: 18, rewardEnergy: 4, rewardXp: 12 },
+        { id: "dwa-ciastka", npc: "Konras", portrait: "konras", line: "Dwa ciasteczka. Jedno jej, drugie też jej. Ja patrzę.", minLevel: 2, requirements: [{ itemId: "slodkosc_3", count: 2 }], rewardCoins: 22, rewardEnergy: 3, rewardXp: 14 },
+        { id: "roza-i-krem", npc: "Gwiazdka", portrait: "gwiazdka", line: "Różyczka obok kremu. Niech wieczór pachnie jednym i drugim.", minLevel: 2, requirements: [{ itemId: "kwiat_3", count: 1 }, { itemId: "slodkosc_2", count: 1 }], rewardCoins: 16, rewardEnergy: 3, rewardXp: 11 },
+        { id: "bukiet-i-koperta", npc: "Króliczek", portrait: "kroliczek", line: "Bukiecik i koperta. Włożę jedno w drugie i udam, że to przypadek.", minLevel: 3, requirements: [{ itemId: "kwiat_4", count: 1 }, { itemId: "list_3", count: 1 }], rewardCoins: 36, rewardEnergy: 5, rewardXp: 20 },
+        { id: "tort", npc: "Konras", portrait: "konras", line: "Tort. Nie na okazję. Po prostu, bo dziś też jesteś.", minLevel: 3, requirements: [{ itemId: "slodkosc_4", count: 1 }], rewardCoins: 30, rewardEnergy: 4, rewardXp: 18 },
+        { id: "list-i-roza", npc: "Gwiazdka", portrait: "gwiazdka", line: "List miłosny i różyczka. Będę tego pilnować, kiedy zaśnie.", minLevel: 3, requirements: [{ itemId: "list_4", count: 1 }, { itemId: "kwiat_3", count: 1 }], rewardCoins: 40, rewardEnergy: 5, rewardXp: 22 },
+        { id: "wianek", npc: "Króliczek", portrait: "kroliczek", line: "Wianek. Załóż mi go w tej grze, a poczuję, że myślisz o włosach.", minLevel: 4, requirements: [{ itemId: "kwiat_5", count: 1 }], rewardCoins: 55, rewardEnergy: 6, rewardXp: 28 },
+        { id: "uczta-i-koperta", npc: "Konras", portrait: "konras", line: "Słodka uczta i koperta. W środku adres: jej strona łóżka.", minLevel: 4, requirements: [{ itemId: "slodkosc_5", count: 1 }, { itemId: "list_3", count: 1 }], rewardCoins: 70, rewardEnergy: 6, rewardXp: 32 },
+        { id: "wyznanie-i-bukiet", npc: "Gwiazdka", portrait: "gwiazdka", line: "Wyznanie i bukiecik. Znam treść. I tak lubię, kiedy układasz je od nowa.", minLevel: 4, requirements: [{ itemId: "list_5", count: 1 }, { itemId: "kwiat_4", count: 1 }], rewardCoins: 75, rewardEnergy: 6, rewardXp: 34 },
+        { id: "ogrod", npc: "Króliczek", portrait: "kroliczek", line: "Ogród serca. Nie chcę wazonu. Chcę miejsce, do którego wracamy.", minLevel: 5, requirements: [{ itemId: "kwiat_6", count: 1 }], rewardCoins: 120, rewardEnergy: 10, rewardXp: 50 },
+        { id: "wieczor", npc: "Konras", portrait: "konras", line: "Wieczór we dwoje. Herbata stygnie, a ja nie.", minLevel: 5, requirements: [{ itemId: "slodkosc_6", count: 1 }], rewardCoins: 120, rewardEnergy: 10, rewardXp: 50 },
+        { id: "na-zawsze", npc: "Gwiazdka", portrait: "gwiazdka", line: "Na zawsze i jeden tort. Żeby przysięga miała jakiś słodki dowód.", minLevel: 5, requirements: [{ itemId: "list_6", count: 1 }, { itemId: "slodkosc_4", count: 1 }], rewardCoins: 150, rewardEnergy: 12, rewardXp: 60 },
+        { id: "podwieczorek", npc: "Króliczek", portrait: "kroliczek", line: "Podwieczorek. Połóż płatek na jagódce. Dwa różne, nie dwa takie same.", minLevel: 1, requirements: [{ itemId: "randka_1", count: 1 }], rewardCoins: 14, rewardEnergy: 3, rewardXp: 10 },
+        { id: "karnecik", npc: "Gwiazdka", portrait: "gwiazdka", line: "Karnecik. Płatek i karteczka na jednym polu. Z tego robi się coś, czego nie ma w donicy.", minLevel: 1, requirements: [{ itemId: "obietnica_1", count: 1 }], rewardCoins: 14, rewardEnergy: 3, rewardXp: 10 },
+        { id: "herbata-dla-dwojga", npc: "Konras", portrait: "konras", line: "Herbata. Jagódka na karteczce. Niech stygnie, a my nie.", minLevel: 1, requirements: [{ itemId: "dom_1", count: 1 }], rewardCoins: 14, rewardEnergy: 3, rewardXp: 10 },
+        { id: "spacer", npc: "Króliczek", portrait: "kroliczek", line: "Spacer. Dwa podwieczorki, albo pąk z kremem. Byle razem.", minLevel: 2, requirements: [{ itemId: "randka_2", count: 1 }], rewardCoins: 24, rewardEnergy: 4, rewardXp: 16 },
+        { id: "zdjecie", npc: "Gwiazdka", portrait: "gwiazdka", line: "Zdjęcie. Dwa karneciki albo pąk z liścikiem. Chcę was w jednej ramce.", minLevel: 2, requirements: [{ itemId: "obietnica_2", count: 1 }], rewardCoins: 24, rewardEnergy: 4, rewardXp: 16 },
+        { id: "koc", npc: "Konras", portrait: "konras", line: "Koc. Dwie herbaty, albo krem z liścikiem. Żeby było czym się przykryć.", minLevel: 2, requirements: [{ itemId: "dom_2", count: 1 }], rewardCoins: 24, rewardEnergy: 4, rewardXp: 16 },
+        { id: "kolacja", npc: "Króliczek", portrait: "kroliczek", line: "Kolacja. Bukiecik i tort na jednym polu. Albo dwa seanse.", minLevel: 3, requirements: [{ itemId: "randka_4", count: 1 }], rewardCoins: 48, rewardEnergy: 6, rewardXp: 26 },
+        { id: "pierscionek", npc: "Gwiazdka", portrait: "gwiazdka", line: "Pierścionek. Wianek i wyznanie. Albo dwa kluczyki, jeśli już je macie.", minLevel: 4, requirements: [{ itemId: "obietnica_5", count: 1 }], rewardCoins: 90, rewardEnergy: 8, rewardXp: 40 },
+        { id: "nasz-kat", npc: "Konras", portrait: "konras", line: "Nasz kąt. Wieczór we dwoje i na zawsze. Z tego nie wraca się do wazonu.", minLevel: 5, requirements: [{ itemId: "dom_6", count: 1 }], rewardCoins: 160, rewardEnergy: 12, rewardXp: 70 }
+      ];
+      const SEED = [
+        "kwiat_1", "list_1", "slodkosc_1", "kwiat_2", "list_2", "slodkosc_2", "kwiat_1",
+        "list_1", "kwiat_2", "slodkosc_1", null, "list_2", "kwiat_3", "slodkosc_1",
+        "slodkosc_2", "kwiat_1", "list_3", "kwiat_2", "slodkosc_3", null, "list_1",
+        "kwiat_1", null, "list_2", "slodkosc_2", "kwiat_2", "list_1", "slodkosc_1",
+        "list_2", "kwiat_3", "slodkosc_1", "list_1", null, "kwiat_1", "slodkosc_2",
+        "kwiat_2", "list_1", null, "slodkosc_1", "kwiat_1", "list_2", "slodkosc_2",
+        "slodkosc_1", "kwiat_1", "list_2", "kwiat_2", null, "list_1", "slodkosc_3",
+        null, "kwiat_2", "list_1", "slodkosc_1", "kwiat_1", null, "list_2",
+        null, null, "kwiat_1", null, "slodkosc_1", null, "list_1"
+      ];
+      const BLURB = {
+        kwiaty: "Z donicy. Z jagódką robi podwieczorek, z karteczką karnecik.",
+        slodkosci: "Z kuchni. Z płatkiem robi randkę, z listem wasz dom.",
+        listy: "Z biurka. Z kwiatem obietnica, ze słodyczą herbata.",
+        randka: "Kwiat i słodycz tego samego poziomu. Dwa takie idą dalej: spacer, seans, kolacja.",
+        obietnica: "Kwiat i list. Dalej jest zdjęcie, piosenka, kluczyk, pierścionek.",
+        dom: "Słodycz i list. Z tego koc, poduszka, śniadanie i wasz kąt."
+      };
+      const MIX = { "kwiaty+slodkosci": "randka", "kwiaty+listy": "obietnica", "listy+slodkosci": "dom" };
+
+      const itemById = new Map(ITEMS.map((item) => [item.id, item]));
+      const genById = new Map(GENERATORS.map((gen) => [gen.id, gen]));
+      const orderById = new Map(ORDERS.map((order) => [order.id, order]));
+
+      function uid() { return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`; }
+      function itemOf(id) { return itemById.get(id); }
+      function nextItem(id) {
+        const item = itemOf(id);
+        return ITEMS.find((entry) => entry.chain === item.chain && entry.level === item.level + 1) || null;
+      }
+      function itemFor(chain, level) {
+        return ITEMS.find((entry) => entry.chain === chain && entry.level === level) || null;
+      }
+      function recipeFor(aId, bId) {
+        const a = itemOf(aId);
+        const b = itemOf(bId);
+        if (!a || !b || a.chain === b.chain || a.level !== b.level) return null;
+        const chain = MIX[[a.chain, b.chain].sort().join("+")];
+        return chain ? itemFor(chain, a.level) : null;
+      }
+      function maxCharges(config, runtime) { return config.maxCharges + runtime.capacityLevel; }
+      function cooldownMs(config, runtime) {
+        return Math.max(5, Math.round(config.cooldownSeconds * 0.8 ** runtime.speedLevel)) * 1000;
+      }
+      function rechargeGenerator(config, runtime, now) {
+        const max = maxCharges(config, runtime);
+        const cooldown = cooldownMs(config, runtime);
+        if (runtime.charges >= max) return { ...runtime, charges: max, nextChargeAt: null };
+        if (runtime.nextChargeAt == null) return { ...runtime, nextChargeAt: now + cooldown };
+        let charges = runtime.charges;
+        let next = runtime.nextChargeAt;
+        while (charges < max && now >= next) { charges += 1; next += cooldown; }
+        if (charges >= max) return { ...runtime, charges: max, nextChargeAt: null };
+        return { ...runtime, charges, nextChargeAt: next };
+      }
+      function spendCharge(config, runtime, now) {
+        const ready = rechargeGenerator(config, runtime, now);
+        if (ready.charges <= 0) return null;
+        const charges = ready.charges - 1;
+        const max = maxCharges(config, ready);
+        return { ...ready, charges, nextChargeAt: charges >= max ? null : (ready.nextChargeAt ?? now + cooldownMs(config, ready)) };
+      }
+      function recoverEnergy(energy, updatedAt, now) {
+        if (energy >= MAX_ENERGY) return { energy: MAX_ENERGY, updatedAt: now };
+        if (now <= updatedAt) return { energy, updatedAt };
+        const gained = Math.floor((now - updatedAt) / REGEN_MS);
+        if (gained <= 0) return { energy, updatedAt };
+        const nextEnergy = Math.min(MAX_ENERGY, energy + gained);
+        return { energy: nextEnergy, updatedAt: nextEnergy >= MAX_ENERGY ? now : updatedAt + gained * REGEN_MS };
+      }
+      function spendEnergy(energy, updatedAt, cost, now) {
+        if (cost <= 0 || energy < cost) return null;
+        return { energy: energy - cost, updatedAt: energy >= MAX_ENERGY ? now : updatedAt };
+      }
+      function msUntilNext(energy, updatedAt, now) {
+        if (energy >= MAX_ENERGY) return 0;
+        const elapsed = Math.max(0, now - updatedAt);
+        const into = elapsed % REGEN_MS;
+        return into === 0 ? REGEN_MS : REGEN_MS - into;
+      }
+      function countItems(board) {
+        const totals = new Map();
+        for (const cell of board) {
+          if (!cell) continue;
+          totals.set(cell.itemId, (totals.get(cell.itemId) || 0) + 1);
+        }
+        return totals;
+      }
+      function canDeliver(board, requirements) {
+        const have = countItems(board);
+        return requirements.every((req) => (have.get(req.itemId) || 0) >= req.count);
+      }
+      function takeRequirements(board, requirements) {
+        if (!canDeliver(board, requirements)) return null;
+        const next = board.slice();
+        for (const req of requirements) {
+          let left = req.count;
+          for (let i = 0; i < next.length && left > 0; i += 1) {
+            if (next[i] && next[i].itemId === req.itemId) { next[i] = null; left -= 1; }
+          }
+        }
+        return next;
+      }
+      function xpForLevel(level) { return 20 + (level - 1) * 15; }
+      function addXp(level, xp, gain) {
+        let nextLevel = Math.max(1, level);
+        let nextXp = xp + gain;
+        while (nextXp >= xpForLevel(nextLevel)) { nextXp -= xpForLevel(nextLevel); nextLevel += 1; }
+        return { level: nextLevel, xp: nextXp };
+      }
+      function pickTemplates(activeIds, playerLevel, count) {
+        const picked = [];
+        const used = new Set(activeIds);
+        while (picked.length < count) {
+          let pool = ORDERS.filter((order) => order.minLevel <= playerLevel && !used.has(order.id));
+          if (!pool.length) pool = ORDERS.filter((order) => !used.has(order.id));
+          if (!pool.length) pool = ORDERS.filter((order) => order.minLevel <= playerLevel);
+          if (!pool.length) pool = ORDERS;
+          const choice = pool[Math.floor(Math.random() * pool.length)];
+          if (!choice) break;
+          picked.push(choice);
+          used.add(choice.id);
+        }
+        return picked;
+      }
+      function speedCost(level) { return 20 * (level + 1) ** 2; }
+      function capacityCost(level) { return 25 * (level + 1) ** 2; }
+      function rowCost(rows) { return 30 * (rows - BASE_ROWS + 1) ** 2; }
+      function persisted() {
+        return {
+          v: 1, rows: state.rows, cols: state.cols, board: state.board,
+          energy: state.energy, energyUpdatedAt: state.energyUpdatedAt,
+          coins: state.coins, xp: state.xp, level: state.level,
+          generators: state.generators, orders: state.orders, sawHint: state.sawHint
+        };
+      }
+      function shopOffers() {
+        const offers = [];
+        for (const generator of GENERATORS) {
+          const runtime = state.generators[generator.id];
+          const speedMaxed = runtime.speedLevel >= MAX_SPEED;
+          const capacityMaxed = runtime.capacityLevel >= MAX_CAPACITY;
+          offers.push({ id: `speed-${generator.id}`, kind: "speed", generatorId: generator.id, cost: speedCost(runtime.speedLevel), title: `${generator.name}: szybciej`, detail: speedMaxed ? "Już najszybsza" : `Poziom ${runtime.speedLevel + 1}. Krótszy oddech między ładunkami.`, maxed: speedMaxed });
+          offers.push({ id: `capacity-${generator.id}`, kind: "capacity", generatorId: generator.id, cost: capacityCost(runtime.capacityLevel), title: `${generator.name}: więcej ładunków`, detail: capacityMaxed ? "Koszyczek pełny" : `Poziom ${runtime.capacityLevel + 1}. Jeden ładunek więcej.`, maxed: capacityMaxed });
+        }
+        const rowMaxed = state.rows >= MAX_ROWS;
+        offers.push({ id: "row", kind: "row", cost: rowCost(state.rows), title: "Nowy rządek planszy", detail: rowMaxed ? "Plansza ma już cały obrus" : `Teraz ${state.rows} rzędów. Dołoży się jeden.`, maxed: rowMaxed });
+        offers.push({ id: "energy", kind: "energy", cost: ENERGY_REFILL_COST, title: "Pełny koszyczek energii", detail: state.energy >= MAX_ENERGY ? "Energia już jest pełna" : `Uzupełnia do ${MAX_ENERGY}.`, maxed: state.energy >= MAX_ENERGY });
+        return offers;
+      }
+      function applyOffer(offer, now) {
+        if (offer.maxed || state.coins < offer.cost) return false;
+        state.coins -= offer.cost;
+        if (offer.kind === "energy") { state.energy = MAX_ENERGY; state.energyUpdatedAt = now; return true; }
+        if (offer.kind === "row") {
+          state.rows += 1;
+          while (state.board.length < state.rows * state.cols) state.board.push(null);
+          return true;
+        }
+        const runtime = { ...state.generators[offer.generatorId] };
+        if (offer.kind === "speed") runtime.speedLevel += 1;
+        if (offer.kind === "capacity") { runtime.capacityLevel += 1; runtime.charges += 1; }
+        state.generators[offer.generatorId] = runtime;
+        return true;
+      }
+      function isPersisted(data) {
+        if (!data || data.v !== 1) return false;
+        if (!Array.isArray(data.board) || data.board.length !== data.rows * data.cols) return false;
+        if (typeof data.energy !== "number" || typeof data.energyUpdatedAt !== "number") return false;
+        if (typeof data.coins !== "number" || typeof data.xp !== "number" || typeof data.level !== "number") return false;
+        if (!data.generators || !Array.isArray(data.orders)) return false;
+        return true;
+      }
+      function freshGenerators() {
+        const generators = {};
+        for (const config of GENERATORS) {
+          generators[config.id] = { charges: config.maxCharges, nextChargeAt: null, speedLevel: 0, capacityLevel: 0 };
+        }
+        return generators;
+      }
+      function createFresh(now) {
+        return {
+          v: 1, rows: BASE_ROWS, cols: BASE_COLS,
+          board: SEED.map((itemId) => (itemId ? { uid: uid(), itemId } : null)),
+          energy: MAX_ENERGY, energyUpdatedAt: now, coins: 0, xp: 0, level: 1,
+          generators: freshGenerators(),
+          orders: ORDERS.filter((order) => order.starter).slice(0, 3).map((template) => ({ uid: uid(), templateId: template.id })),
+          sawHint: false
+        };
+      }
+      function catchUp(now) {
+        const energy = recoverEnergy(state.energy, state.energyUpdatedAt, now);
+        state.energy = energy.energy;
+        state.energyUpdatedAt = energy.updatedAt;
+        const generators = {};
+        for (const config of GENERATORS) {
+          const runtime = state.generators[config.id] || { charges: config.maxCharges, nextChargeAt: null, speedLevel: 0, capacityLevel: 0 };
+          generators[config.id] = rechargeGenerator(config, runtime, now);
+        }
+        state.generators = generators;
+      }
+      function writeSave() {
+        try { localStorage.setItem(SAVE_KEY, JSON.stringify(persisted())); } catch { /* prywatny tryb */ }
+      }
+      function readSave() {
+        try {
+          const data = JSON.parse(localStorage.getItem(SAVE_KEY) || "null");
+          return isPersisted(data) ? data : null;
+        } catch { return null; }
+      }
+
+      const state = { now: Date.now(), toast: null, pulse: null, selected: null };
+      const saved = readSave();
+      Object.assign(state, saved || createFresh(state.now));
+      catchUp(state.now);
+      writeSave();
+
+      let toastTimer = 0;
+      let pulseTimer = 0;
+      function say(text) {
+        state.toast = text;
+        window.clearTimeout(toastTimer);
+        toastTimer = window.setTimeout(() => { state.toast = null; paintToast(); }, 2400);
+        paintToast();
+      }
+      function pulse(index) {
+        state.pulse = index;
+        window.clearTimeout(pulseTimer);
+        pulseTimer = window.setTimeout(() => { state.pulse = null; render(); }, 420);
+      }
+
+      function esc(value) {
+        return String(value).replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+      }
+      function flowerSvg(level) {
+        const petals = Math.min(3 + level, 8);
+        let body = "";
+        for (let i = 0; i < petals; i += 1) {
+          body += `<ellipse cx="32" cy="16" rx="${5 + level * 0.25}" ry="${9 + level * 0.4}" fill="${i % 2 ? "#e85a84" : "#ffb3c7"}" transform="rotate(${(360 / petals) * i} 32 32)"/>`;
+        }
+        return `<svg viewBox="0 0 64 64">${body}<circle cx="32" cy="32" r="${4 + level * 0.45}" fill="#ffe7a3"/></svg>`;
+      }
+      function sweetSvg(level) {
+        if (level === 1) return `<svg viewBox="0 0 64 64"><path d="M32 16c3 6 3 8 0 12" stroke="#5d8b64" stroke-width="2.4" fill="none" stroke-linecap="round"/><circle cx="32" cy="36" r="13" fill="#e85a84"/><circle cx="27" cy="33" r="1.6" fill="#fff"/><circle cx="35" cy="38" r="1.6" fill="#fff"/><circle cx="31" cy="42" r="1.4" fill="#fff"/></svg>`;
+        if (level === 2) return `<svg viewBox="0 0 64 64"><ellipse cx="32" cy="40" rx="16" ry="8" fill="#fffaf3" stroke="#f2c2d0"/><path d="M22 38c4-14 16-14 20 0" fill="#ffe7a3" stroke="#f2c2d0"/><circle cx="32" cy="30" r="4" fill="#fff"/></svg>`;
+        const layers = Math.min(level - 1, 4);
+        let body = "";
+        for (let i = 0; i < layers; i += 1) {
+          const width = 42 - i * 6;
+          body += `<rect x="${(64 - width) / 2}" y="${42 - i * 8}" width="${width}" height="10" rx="4" fill="${i % 2 ? "#ffd0e0" : "#f48aaa"}"/>`;
+        }
+        const star = level >= 5 ? `<path d="M32 8l1.2 3.2H37l-2.6 2 1 3.2L32 14.4 28.6 16.4l1-3.2-2.6-2H30.8z" fill="#ffe7a3"/>` : "";
+        return `<svg viewBox="0 0 64 64">${body}<circle cx="32" cy="16" r="4" fill="#e85a84"/>${star}</svg>`;
+      }
+      function letterSvg(level) {
+        const heart = level >= 2 ? `<path d="M32 ${48 - level}c-${4 + level}-3-${6 + level}-6-${4 + level}-9 1-2 3-2 ${4 + level} 0 1-2 3-2 ${4 + level} 0 2 3 0 6-${4 + level} 9z" fill="#e85a84"/>` : "";
+        const seal = level >= 5 ? `<circle cx="46" cy="40" r="5" fill="#ffe7a3" stroke="#e85a84"/>` : "";
+        return `<svg viewBox="0 0 64 64"><rect x="12" y="18" width="40" height="30" rx="5" fill="#fffaf3" stroke="#e85a84" stroke-width="2"/><path d="M14 20l18 14L50 20" fill="none" stroke="#f48aaa" stroke-width="2"/>${heart}${seal}</svg>`;
+      }
+      function randkaSvg(level) {
+        if (level === 1) return `<svg viewBox="0 0 64 64"><path d="M18 28h28v16a8 8 0 0 1-8 8H26a8 8 0 0 1-8-8z" fill="#fffaf3" stroke="#e85a84"/><path d="M24 28c0-8 16-8 16 0" fill="none" stroke="#f2c2d0"/><circle cx="40" cy="22" r="4" fill="#ffb3c7"/><circle cx="24" cy="20" r="3" fill="#e85a84"/></svg>`;
+        if (level === 2) return `<svg viewBox="0 0 64 64"><ellipse cx="22" cy="40" rx="7" ry="10" fill="#ffb3c7"/><ellipse cx="40" cy="36" rx="7" ry="10" fill="#e85a84"/><path d="M12 50c8-2 12 2 20 0s12-4 20 0" fill="none" stroke="#c47b4a" stroke-width="3" stroke-linecap="round"/></svg>`;
+        if (level === 3) return `<svg viewBox="0 0 64 64"><rect x="12" y="18" width="40" height="28" rx="4" fill="#2b2440"/><rect x="16" y="22" width="32" height="16" fill="#6b5b95"/><circle cx="32" cy="30" r="4" fill="#ffe7a3"/><rect x="26" y="46" width="12" height="4" rx="1" fill="#e85a84"/></svg>`;
+        if (level === 4) return `<svg viewBox="0 0 64 64"><ellipse cx="32" cy="36" rx="18" ry="10" fill="#fffaf3" stroke="#e85a84"/><path d="M24 34c2 4 14 4 16 0" fill="#f48aaa"/><circle cx="26" cy="24" r="3" fill="#ffb3c7"/><circle cx="38" cy="22" r="3" fill="#e85a84"/></svg>`;
+        if (level === 5) return `<svg viewBox="0 0 64 64"><circle cx="24" cy="28" r="8" fill="#ffb3c7"/><circle cx="40" cy="28" r="8" fill="#e85a84"/><path d="M16 44c6 8 26 8 32 0" fill="none" stroke="#f0b429" stroke-width="3"/><path d="M32 18l2 4h4l-3 3 1 4-4-2-4 2 1-4-3-3h4z" fill="#ffe7a3"/></svg>`;
+        return `<svg viewBox="0 0 64 64"><path d="M18 36a14 14 0 1 1 28 0 16 16 0 0 1-28 0z" fill="#2b2440"/><circle cx="24" cy="22" r="3" fill="#ffe7a3"/><circle cx="40" cy="18" r="2" fill="#fff"/><path d="M28 34c2 3 6 3 8 0" stroke="#e85a84" fill="none" stroke-width="2"/><circle cx="26" cy="32" r="1.4" fill="#fff"/><circle cx="36" cy="32" r="1.4" fill="#fff"/></svg>`;
+      }
+      function obietnicaSvg(level) {
+        if (level === 1) return `<svg viewBox="0 0 64 64"><rect x="16" y="14" width="32" height="36" rx="3" fill="#fffaf3" stroke="#c9a36a"/><path d="M22 24h20M22 32h16M22 40h12" stroke="#e85a84" stroke-width="2"/></svg>`;
+        if (level === 2) return `<svg viewBox="0 0 64 64"><rect x="14" y="16" width="36" height="32" rx="3" fill="#f7e7c8" stroke="#c47b4a"/><rect x="20" y="22" width="24" height="16" fill="#ffe1ea"/><circle cx="28" cy="30" r="3" fill="#e85a84"/><path d="M34 34c4-6 8-6 8 0" fill="#ffb3c7"/></svg>`;
+        if (level === 3) return `<svg viewBox="0 0 64 64"><path d="M28 12v28" stroke="#5c3142" stroke-width="3"/><ellipse cx="38" cy="22" rx="10" ry="8" fill="#e85a84"/><path d="M28 40c-8 6-8 12 0 12" fill="none" stroke="#5c3142" stroke-width="3"/><circle cx="22" cy="50" r="3" fill="#ffe7a3"/></svg>`;
+        if (level === 4) return `<svg viewBox="0 0 64 64"><circle cx="32" cy="26" r="8" fill="none" stroke="#f0b429" stroke-width="4"/><path d="M32 34v16" stroke="#f0b429" stroke-width="4"/><path d="M32 44h10" stroke="#f0b429" stroke-width="4" stroke-linecap="round"/></svg>`;
+        if (level === 5) return `<svg viewBox="0 0 64 64"><circle cx="32" cy="34" r="12" fill="none" stroke="#f0b429" stroke-width="5"/><circle cx="32" cy="18" r="5" fill="#e85a84"/><path d="M32 8l1.2 3h3l-2.4 2 1 3L32 14.4 29.2 16l1-3-2.4-2h3z" fill="#ffe7a3"/></svg>`;
+        return `<svg viewBox="0 0 64 64"><path d="M18 36c0-10 8-16 14-16s14 6 14 16c0 12-14 18-14 18S18 48 18 36z" fill="#fffaf3" stroke="#e85a84"/><path d="M26 34c2 3 10 3 12 0" stroke="#e85a84" fill="none" stroke-width="2"/><circle cx="32" cy="24" r="3" fill="#f0b429"/></svg>`;
+      }
+      function domSvg(level) {
+        if (level === 1) return `<svg viewBox="0 0 64 64"><path d="M22 30h20v14a6 6 0 0 1-6 6H28a6 6 0 0 1-6-6z" fill="#fff" stroke="#c47b88"/><path d="M30 30c2-10 2-10 4 0" fill="none" stroke="#bbb" stroke-width="2"/><rect x="28" y="36" width="8" height="6" rx="2" fill="#e85a84"/></svg>`;
+        if (level === 2) return `<svg viewBox="0 0 64 64"><path d="M12 28c8 10 32 10 40 0v18H12z" fill="#f48aaa"/><path d="M12 28c10-8 30-8 40 0" fill="#ffd0e0"/><path d="M30 36v10" stroke="#fff" stroke-width="2"/></svg>`;
+        if (level === 3) return `<svg viewBox="0 0 64 64"><rect x="14" y="28" width="36" height="18" rx="8" fill="#fffaf3" stroke="#f2c2d0"/><path d="M18 28c4-10 24-10 28 0" fill="#ffe1ea"/><path d="M30 24c1 4 3 4 4 0" stroke="#e85a84" fill="none"/></svg>`;
+        if (level === 4) return `<svg viewBox="0 0 64 64"><ellipse cx="32" cy="40" rx="16" ry="8" fill="#fffaf3" stroke="#e7c48a"/><circle cx="24" cy="36" r="4" fill="#f0b429"/><circle cx="34" cy="34" r="5" fill="#e85a84"/><rect x="40" y="30" width="6" height="10" rx="2" fill="#8ed86a"/></svg>`;
+        if (level === 5) return `<svg viewBox="0 0 64 64"><path d="M12 32 L32 16 L52 32 V50 H12 Z" fill="#ffd0e0" stroke="#e85a84"/><rect x="28" y="36" width="8" height="14" fill="#c47b4a"/><rect x="18" y="36" width="7" height="7" fill="#ffe7a3"/></svg>`;
+        return `<svg viewBox="0 0 64 64"><rect x="16" y="18" width="32" height="28" rx="3" fill="#d9ecff" stroke="#e85a84"/><path d="M16 32h32" stroke="#fff"/><path d="M32 18v28" stroke="#fff"/><path d="M32 40c-4-4-4-8 0-8s4 4 0 8z" fill="#e85a84"/></svg>`;
+      }
+      function itemSvg(item) {
+        const svg = item.chain === "kwiaty" ? flowerSvg(item.level)
+          : item.chain === "slodkosci" ? sweetSvg(item.level)
+          : item.chain === "listy" ? letterSvg(item.level)
+          : item.chain === "randka" ? randkaSvg(item.level)
+          : item.chain === "obietnica" ? obietnicaSvg(item.level)
+          : domSvg(item.level);
+        return `<span class="item" title="${esc(item.name)}" aria-hidden="true">${svg}</span>`;
+      }
+      function portrait(kind) {
+        if (kind === "kroliczek") return `<svg viewBox="0 0 64 64"><ellipse cx="24" cy="16" rx="6" ry="14" fill="#f4c7d4"/><ellipse cx="40" cy="16" rx="6" ry="14" fill="#f4c7d4"/><circle cx="32" cy="36" r="16" fill="#ffe1ea"/><circle cx="26" cy="34" r="2" fill="#5c3142"/><circle cx="38" cy="34" r="2" fill="#5c3142"/><path d="M28 42c2 3 6 3 8 0" stroke="#e85a84" stroke-width="2" fill="none"/></svg>`;
+        if (kind === "konras") return `<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="16" fill="#f3d2c4"/><path d="M18 30c2-14 26-14 28 0v4H18z" fill="#3d322c"/><circle cx="26" cy="34" r="1.8" fill="#3d322c"/><circle cx="38" cy="34" r="1.8" fill="#3d322c"/><path d="M28 40c2 2 6 2 8 0" stroke="#c47b88" stroke-width="2" fill="none"/></svg>`;
+        return `<svg viewBox="0 0 64 64"><path d="M32 8l6 16h16l-13 10 5 16-14-9-14 9 5-16L10 24h16z" fill="#ffe7a3"/><circle cx="27" cy="32" r="1.6" fill="#5c3142"/><circle cx="37" cy="32" r="1.6" fill="#5c3142"/><path d="M28 38c2 2 6 2 8 0" stroke="#e85a84" stroke-width="1.6" fill="none"/></svg>`;
+      }
+      function formatRemain(ms) {
+        const total = Math.ceil(ms / 1000);
+        return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`;
+      }
+      const ICONS = {
+        heart: `<svg viewBox="0 0 64 64"><path d="M32 52c-14-8-20-16-16-26 3-7 11-8 16-1 5-7 13-6 16 1 4 10-2 18-16 26z" fill="#e85a84"/></svg>`,
+        bolt: `<svg viewBox="0 0 64 64"><path d="M36 6L14 36h16l-4 22 24-32H34z" fill="#f0b429"/></svg>`,
+        coin: `<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="18" fill="#f0b429"/><circle cx="32" cy="32" r="12" fill="none" stroke="#fff4c8" stroke-width="3"/></svg>`,
+        chest: `<svg viewBox="0 0 64 64"><rect x="10" y="26" width="44" height="26" rx="6" fill="#e7a15a"/><path d="M10 34c8-12 36-12 44 0" fill="#f6c888"/><rect x="28" y="34" width="8" height="8" rx="2" fill="#ffe7a3"/></svg>`,
+        stall: `<svg viewBox="0 0 64 64"><path d="M8 28h48l-6 8H14z" fill="#f26d92"/><path d="M12 18h40l4 10H8z" fill="#ffb3c7"/><path d="M18 36h8v16h-8zM38 36h8v16h-8z" fill="#c47b4a"/><rect x="26" y="40" width="12" height="12" rx="2" fill="#ffe7a3"/></svg>`,
+        home: `<svg viewBox="0 0 64 64"><path d="M10 30 L32 12 L54 30 V52 H40 V38 H24 V52 H10 Z" fill="#e85a84"/></svg>`,
+        trash: `<svg viewBox="0 0 64 64"><path d="M18 22h28l-2 30a6 6 0 0 1-6 6H26a6 6 0 0 1-6-6z" fill="#fff"/><path d="M16 18h32M26 18l2-6h8l2 6" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/></svg>`
+      };
+
+      function readyOrders() {
+        return state.orders.filter((order) => canDeliver(state.board, orderById.get(order.templateId).requirements));
+      }
+      function render() {
+        const have = countItems(state.board);
+        const ready = readyOrders();
+        const needed = new Set();
+        for (const order of state.orders) {
+          for (const req of orderById.get(order.templateId).requirements) needed.add(req.itemId);
+        }
+        const selectedId = state.selected == null ? null : state.board[state.selected]?.itemId || null;
+        const remain = msUntilNext(state.energy, state.energyUpdatedAt, state.now);
+        const energyNote = state.energy >= MAX_ENERGY ? "pełna" : formatRemain(remain);
+        const ordersHtml = state.orders.map((order) => {
+          const template = orderById.get(order.templateId);
+          const done = canDeliver(state.board, template.requirements);
+          const needs = template.requirements.map((req) => {
+            const item = itemOf(req.itemId);
+            return `<span class="need">${itemSvg(item)}<em>${have.get(req.itemId) || 0}/${req.count}</em></span>`;
+          }).join("");
+          return `<button type="button" class="order${done ? " ready" : ""}" ${done ? "" : "disabled"} title="${esc(template.line)}" data-act="deliver" data-id="${esc(order.uid)}"><span class="who">${portrait(template.portrait)}</span><span class="order-body"><strong>${esc(template.npc)}</strong><span class="needs">${needs}</span><span class="pay">+${template.rewardCoins}</span></span>${done ? `<span class="done-flag">GOTOWE</span>` : ""}</button>`;
+        }).join("");
+        const producers = GENERATORS.map((config) => {
+          const runtime = state.generators[config.id];
+          const item = itemFor(config.chain, config.spawnLevel);
+          const max = maxCharges(config, runtime);
+          const seconds = runtime.nextChargeAt ? Math.max(0, Math.ceil((runtime.nextChargeAt - state.now) / 1000)) : 0;
+          const resting = runtime.charges <= 0;
+          return `<button type="button" class="producer ${config.chain}${resting ? " resting" : ""}" data-act="gen" data-id="${config.id}" aria-label="${esc(config.name)}. ${runtime.charges} z ${max} ładunków">${itemSvg(item)}<strong>${esc(config.name)}</strong><em data-charge="${config.id}">${resting ? `${seconds}s` : `${runtime.charges}/${max}`}</em></button>`;
+        }).join("");
+        const cells = state.board.map((cell, index) => {
+          const item = cell ? itemOf(cell.itemId) : null;
+          const classes = ["cell"];
+          if (cell) classes.push("filled");
+          if (state.selected === index) classes.push("selected");
+          if (selectedId && cell && index !== state.selected && cell.itemId === selectedId) classes.push("mergeable");
+          if (selectedId && cell && index !== state.selected && cell.itemId !== selectedId && recipeFor(selectedId, cell.itemId)) classes.push("craftable");
+          if (cell && needed.has(cell.itemId)) classes.push("needed");
+          if (state.pulse === index) classes.push("pop");
+          return `<button type="button" class="${classes.join(" ")}" data-i="${index}" aria-label="${item ? `${esc(item.name)}, poziom ${item.level}` : "puste pole"}">${item ? itemSvg(item) : ""}${item ? `<i>${item.level}</i>` : ""}</button>`;
+        }).join("");
+        const locked = state.rows < MAX_ROWS
+          ? Array.from({ length: state.cols }, () => `<button type="button" class="cell locked" data-act="shop" aria-label="Zamknięty rządek, otwórz w sklepie"></button>`).join("")
+          : "";
+        const selected = state.selected == null ? null : state.board[state.selected];
+        const selectedItem = selected ? itemOf(selected.itemId) : null;
+        const goal = xpForLevel(state.level);
+        document.getElementById("app").innerHTML = `
+          <header class="hud">
+            <button type="button" class="hud-badge" data-act="shop" aria-label="Skrzynka nagród">${ICONS.chest}${ready.length ? `<i>${ready.length}</i>` : ""}</button>
+            <div class="meters">
+              <div class="meter"><span class="meter-icon">${ICONS.heart}</span><span><strong>${state.level}</strong><span class="sr">poziom</span></span><button type="button" data-act="shop" aria-label="Dokup: poziom">+</button></div>
+              <div class="meter" data-meter="energy"><span class="meter-icon">${ICONS.bolt}</span><span><strong>${state.energy}</strong><small>${energyNote}</small><span class="sr">energia</span></span><button type="button" data-act="shop" aria-label="Dokup: energia">+</button></div>
+              <div class="meter" data-meter="coins"><span class="meter-icon">${ICONS.coin}</span><span><strong>${state.coins}</strong><span class="sr">monety</span></span><button type="button" data-act="shop" aria-label="Dokup: monety">+</button></div>
+            </div>
+            <button type="button" class="hud-badge" data-act="shop" aria-label="Sklep">${ICONS.stall}</button>
+          </header>
+          <div class="playfield">
+            <section class="orders" aria-label="Zamówienia">
+              <button type="button" class="claim" data-act="claim" ${ready.length ? "" : "disabled"}>${ready.length ? "Odbierz nagrody!" : "Zamówienia"}</button>
+              ${ordersHtml}
+            </section>
+            <div class="board-stack">
+              <div class="producers">${producers}</div>
+              <section class="play"><div class="board" style="grid-template-columns:repeat(${state.cols},minmax(0,1fr));grid-template-rows:repeat(${state.rows + (state.rows < MAX_ROWS ? 1 : 0)},minmax(0,1fr))">${cells}${locked}</div></section>
+              <footer class="dock">
+                <a class="dock-round" href="./index.html" aria-label="Strona">${ICONS.home}</a>
+                <div class="info">${selectedItem ? itemSvg(selectedItem) : `<span class="info-mark">!</span>`}<div><strong>${selectedItem ? `${esc(selectedItem.name)} (poziom ${selectedItem.level})` : "Wybierz rzecz na planszy"}</strong><span>${selectedItem ? esc(BLURB[selectedItem.chain]) : "Dwa takie same rosną. Różne, na tym samym poziomie, dają nową rzecz."}</span></div></div>
+                <button type="button" class="trash" data-act="sell" ${selectedItem ? "" : "disabled"} aria-label="${selectedItem ? `Wyrzuć za ${selectedItem.sellValue} monet` : "Wyrzuć"}">${ICONS.trash}</button>
+                <button type="button" class="degrees" data-act="shop"><span>Poziom</span><strong>${state.level}</strong><i style="width:${Math.min(100, (state.xp / goal) * 100)}%"></i></button>
+              </footer>
+            </div>
+          </div>
+          <nav class="links"><a class="home" href="./index.html">Strona</a><a href="./bukiet.html">Bukiet</a><a href="./gift.html">Sto dni</a><a href="./cart.html">Koszyk</a></nav>`;
+        paintToast();
+        paintShop();
+      }
+      function paintToast() {
+        const node = document.getElementById("toast");
+        node.hidden = !state.toast;
+        node.textContent = state.toast || "";
+      }
+      function paintShop() {
+        const host = document.getElementById("shop");
+        if (location.hash !== "#/shop") { host.innerHTML = ""; return; }
+        const offers = shopOffers().map((offer) => {
+          const affordable = state.coins >= offer.cost && !offer.maxed;
+          return `<li><div><strong>${esc(offer.title)}</strong><span>${esc(offer.detail)}</span></div><button type="button" data-act="buy" data-id="${esc(offer.id)}" ${affordable ? "" : "disabled"}>${offer.maxed ? "Maks" : offer.cost}</button></li>`;
+        }).join("");
+        host.innerHTML = `<div class="mask" data-act="mask"><div class="sheet" role="dialog" aria-labelledby="shop-title"><h2 id="shop-title">Sklep całusów</h2><p>Masz ${state.coins} monet. Donica, kuchnia i biurko lubią, kiedy o nie dbasz.</p><ul class="offers">${offers}</ul><button type="button" class="close" data-act="close">Wracam do planszy</button><button type="button" class="close quiet" data-act="reset">Zacznij od nowa</button></div></div>`;
+      }
+      function patchTimers() {
+        const remain = msUntilNext(state.energy, state.energyUpdatedAt, state.now);
+        const meter = document.querySelector("[data-meter='energy']");
+        if (meter) {
+          meter.querySelector("strong").textContent = String(state.energy);
+          meter.querySelector("small").textContent = state.energy >= MAX_ENERGY ? "pełna" : formatRemain(remain);
+        }
+        for (const config of GENERATORS) {
+          const label = document.querySelector(`[data-charge="${config.id}"]`);
+          if (!label) continue;
+          const runtime = state.generators[config.id];
+          const max = maxCharges(config, runtime);
+          const seconds = runtime.nextChargeAt ? Math.max(0, Math.ceil((runtime.nextChargeAt - state.now) / 1000)) : 0;
+          label.textContent = runtime.charges <= 0 ? `${seconds}s` : `${runtime.charges}/${max}`;
+        }
+      }
+
+      function tapGenerator(id) {
+        const now = Date.now();
+        state.now = now;
+        catchUp(now);
+        const config = genById.get(id);
+        const charged = spendCharge(config, state.generators[id], now);
+        if (!charged) { writeSave(); say(`${config.name} zbiera oddech. Jeszcze chwila.`); render(); return; }
+        const paid = spendEnergy(state.energy, state.energyUpdatedAt, config.energyCost, now);
+        if (!paid) { writeSave(); say("Koszyczek energii jest pusty."); render(); return; }
+        const spots = [];
+        state.board.forEach((cell, index) => { if (!cell) spots.push(index); });
+        if (!spots.length) { writeSave(); say("Plansza jest pełna. Połącz albo sprzedaj coś małego."); render(); return; }
+        const item = itemFor(config.chain, config.spawnLevel);
+        const index = spots[Math.floor(Math.random() * spots.length)];
+        state.board = state.board.slice();
+        state.board[index] = { uid: uid(), itemId: item.id };
+        state.energy = paid.energy;
+        state.energyUpdatedAt = paid.updatedAt;
+        state.generators = { ...state.generators, [id]: charged };
+        state.sawHint = true;
+        state.selected = null;
+        writeSave();
+        pulse(index);
+        say(`${item.name} wskakuje na planszę.`);
+        render();
+      }
+      function dropOn(from, to) {
+        if (from === to || !state.board[from]) return;
+        const source = state.board[from];
+        const target = state.board[to];
+        if (!target) {
+          const board = state.board.slice();
+          board[to] = source;
+          board[from] = null;
+          state.board = board;
+          state.selected = null;
+          writeSave();
+          render();
+          return;
+        }
+        if (source.itemId === target.itemId) {
+          const upgraded = nextItem(source.itemId);
+          if (!upgraded) { say(`${itemOf(source.itemId).name} jest już najsłodszym poziomem.`); return; }
+          const board = state.board.slice();
+          board[from] = null;
+          board[to] = { uid: uid(), itemId: upgraded.id };
+          state.board = board;
+          state.selected = null;
+          writeSave();
+          pulse(to);
+          say(`Połączenie: ${upgraded.name}.`);
+          render();
+          return;
+        }
+        const mixed = recipeFor(source.itemId, target.itemId);
+        if (mixed) {
+          const board = state.board.slice();
+          board[from] = null;
+          board[to] = { uid: uid(), itemId: mixed.id };
+          state.board = board;
+          state.selected = null;
+          writeSave();
+          pulse(to);
+          say(`Nowe: ${mixed.name}. ${itemOf(source.itemId).name} i ${itemOf(target.itemId).name} dały coś innego.`);
+          render();
+          return;
+        }
+        const board = state.board.slice();
+        board[from] = target;
+        board[to] = source;
+        state.board = board;
+        state.selected = null;
+        writeSave();
+        render();
+      }
+      function deliver(orderUid) {
+        const now = Date.now();
+        state.now = now;
+        catchUp(now);
+        const active = state.orders.find((order) => order.uid === orderUid);
+        if (!active) return;
+        const template = orderById.get(active.templateId);
+        if (!canDeliver(state.board, template.requirements)) { say("Jeszcze nie ma kompletu."); return; }
+        const board = takeRequirements(state.board, template.requirements);
+        const progress = addXp(state.level, state.xp, template.rewardXp);
+        const energy = Math.min(MAX_ENERGY, state.energy + template.rewardEnergy);
+        const replacement = pickTemplates([...state.orders.filter((order) => order.uid !== orderUid).map((order) => order.templateId), active.templateId], progress.level, 1)[0];
+        state.board = board;
+        state.coins += template.rewardCoins;
+        state.energy = energy;
+        state.energyUpdatedAt = energy >= MAX_ENERGY ? now : state.energyUpdatedAt;
+        state.level = progress.level;
+        state.xp = progress.xp;
+        state.orders = state.orders.map((order) => order.uid === orderUid ? { uid: uid(), templateId: replacement.id } : order);
+        state.selected = null;
+        writeSave();
+        say(`${template.npc} bierze to do serca. +${template.rewardCoins} monet.`);
+        render();
+      }
+      function buy(offerId) {
+        const now = Date.now();
+        state.now = now;
+        catchUp(now);
+        const offer = shopOffers().find((entry) => entry.id === offerId);
+        if (!offer) return;
+        if (!applyOffer(offer, now)) { say(offer.maxed ? "To już kupione na dobre." : "Brakuje monet."); render(); return; }
+        writeSave();
+        say(`Kupione: ${offer.title}.`);
+        render();
+      }
+      function sellSelected() {
+        if (state.selected == null) return;
+        const cell = state.board[state.selected];
+        if (!cell) return;
+        const item = itemOf(cell.itemId);
+        state.board = state.board.slice();
+        state.board[state.selected] = null;
+        state.coins += item.sellValue;
+        state.selected = null;
+        writeSave();
+        say(`${item.name} za ${item.sellValue} monet.`);
+        render();
+      }
+      function resetGame() {
+        if (!window.confirm("Zacząć od nowa? Zapis zniknie.")) return;
+        try { localStorage.removeItem(SAVE_KEY); } catch { /* ignore */ }
+        Object.assign(state, createFresh(Date.now()));
+        state.now = Date.now();
+        state.selected = null;
+        state.pulse = null;
+        writeSave();
+        say("Czysta plansza. Zaczynamy od płatka.");
+        render();
+      }
+
+      const drag = { active: null };
+      document.addEventListener("pointerdown", (event) => {
+        const cell = event.target.closest("[data-i]");
+        if (!cell || !document.getElementById("app").contains(cell) || event.button > 0) return;
+        const index = Number(cell.dataset.i);
+        if (!state.board[index]) {
+          if (state.selected != null) dropOn(state.selected, index);
+          return;
+        }
+        drag.active = { index, x: event.clientX, y: event.clientY, dragging: false };
+        event.preventDefault();
+      });
+      window.addEventListener("pointermove", (event) => {
+        const active = drag.active;
+        if (!active) return;
+        const dx = event.clientX - active.x;
+        const dy = event.clientY - active.y;
+        const ghost = document.getElementById("ghost");
+        if (!active.dragging && dx * dx + dy * dy > 36) {
+          active.dragging = true;
+          const item = itemOf(state.board[active.index].itemId);
+          ghost.className = "ghost";
+          ghost.innerHTML = itemSvg(item);
+        }
+        if (active.dragging) {
+          ghost.style.left = `${event.clientX}px`;
+          ghost.style.top = `${event.clientY}px`;
+        }
+      });
+      window.addEventListener("pointerup", (event) => {
+        const active = drag.active;
+        if (!active) return;
+        drag.active = null;
+        const ghost = document.getElementById("ghost");
+        ghost.className = "";
+        ghost.innerHTML = "";
+        if (active.dragging) {
+          const hit = document.elementFromPoint(event.clientX, event.clientY)?.closest("[data-i]");
+          if (hit) dropOn(active.index, Number(hit.dataset.i));
+          return;
+        }
+        if (state.selected == null) { state.selected = active.index; render(); }
+        else if (state.selected === active.index) { state.selected = null; render(); }
+        else dropOn(state.selected, active.index);
+      });
+      document.addEventListener("click", (event) => {
+        const mask = event.target.closest("[data-act='mask']");
+        if (mask && event.target === mask) { location.hash = "#/"; return; }
+        const node = event.target.closest("[data-act]");
+        if (!node) return;
+        const act = node.dataset.act;
+        if (act === "shop") { location.hash = "#/shop"; paintShop(); }
+        else if (act === "close") { location.hash = "#/"; paintShop(); }
+        else if (act === "gen") tapGenerator(node.dataset.id);
+        else if (act === "deliver") deliver(node.dataset.id);
+        else if (act === "claim") { const first = readyOrders()[0]; if (first) deliver(first.uid); }
+        else if (act === "sell") sellSelected();
+        else if (act === "buy") buy(node.dataset.id);
+        else if (act === "reset") resetGame();
+      });
+      window.addEventListener("hashchange", paintShop);
+      window.setInterval(() => {
+        const beforeEnergy = state.energy;
+        const beforeGen = JSON.stringify(state.generators);
+        state.now = Date.now();
+        catchUp(state.now);
+        if (state.energy !== beforeEnergy || JSON.stringify(state.generators) !== beforeGen) {
+          writeSave();
+          render();
+        } else patchTimers();
+      }, 1000);
+
+      render();
+    </script>
+  </body>
+</html>
