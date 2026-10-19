@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dla Króliczka</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #5c3142;
+      --soft: #8a5368;
+      --rose: #e85a84;
+      --paper: rgba(255, 250, 247, 0.86);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+    }
+
+    body {
+      font-family: "Nunito", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 12% 8%, #ffe1ea 0, transparent 36%),
+        radial-gradient(circle at 90% 12%, #ffe8c8 0, transparent 32%),
+        radial-gradient(circle at 70% 90%, #ffd6e6 0, transparent 38%),
+        #fff7f4;
+      overflow-x: hidden;
+    }
+
+    .bokeh, .petals, .hearts, .butterflies {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .bokeh { z-index: 0; }
+    .petals { z-index: 1; }
+    .butterflies { z-index: 2; }
+    .hearts { z-index: 4; }
+
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(8px);
+      opacity: 0.55;
+      animation: drift 14s ease-in-out infinite;
+    }
+
+    main {
+      position: relative;
+      z-index: 3;
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 28px 18px 72px;
+      text-align: center;
+    }
+
+    .back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      color: var(--soft);
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid rgba(232, 90, 132, 0.18);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-weight: 700;
+      font-size: 0.92rem;
+    }
+
+    .eyebrow {
+      margin: 22px 0 0;
+      letter-spacing: 0.16em;
+      text-transform: lowercase;
+      font-size: 0.82rem;
+      color: var(--rose);
+      font-weight: 700;
+    }
+
+    h1 {
+      font-family: "Caveat", cursive;
+      font-size: clamp(2.6rem, 8vw, 4.2rem);
+      line-height: 0.95;
+      margin: 8px 0 10px;
+      font-weight: 700;
+    }
+
+    .lead {
+      margin: 0 auto 8px;
+      max-width: 34rem;
+      color: var(--soft);
+      font-size: 1.05rem;
+      line-height: 1.55;
+    }
+
+    .stage {
+      position: relative;
+      margin: 8px auto 4px;
+      min-height: 420px;
+    }
+
+    .bouquet {
+      width: min(100%, 420px);
+      margin: 0 auto;
+      filter: drop-shadow(0 18px 18px rgba(196, 90, 120, 0.18));
+    }
+
+    .bouquet svg {
+      width: 100%;
+      height: auto;
+      overflow: visible;
+      animation: float 5.5s ease-in-out infinite;
+    }
+
+    .bloom {
+      transform-box: fill-box;
+      transform-origin: center;
+      transform: scale(0);
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .open .bloom {
+      animation: bloom 0.9s cubic-bezier(.16, 1.35, .42, 1) forwards;
+      animation-delay: var(--d);
+    }
+
+    .sway {
+      transform-box: fill-box;
+      transform-origin: center bottom;
+    }
+
+    .open .sway {
+      animation: sway 4.8s ease-in-out infinite;
+      animation-delay: calc(var(--d) + 0.95s);
+    }
+
+    .stem, .leaf, .breath {
+      opacity: 0;
+    }
+
+    .stem {
+      stroke-dasharray: 520;
+      stroke-dashoffset: 520;
+    }
+
+    .open .stem {
+      opacity: 1;
+      animation: draw 1.15s ease forwards;
+      animation-delay: var(--d);
+    }
+
+    .open .leaf, .open .breath {
+      animation: fadein 0.8s ease forwards;
+      animation-delay: calc(var(--d) + 0.25s);
+    }
+
+    .bud {
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+
+    .open .bud {
+      animation: hidebud 0.45s ease forwards;
+    }
+
+    .whisper {
+      min-height: 1.6em;
+      margin: 0;
+      font-family: "Caveat", cursive;
+      font-size: 1.8rem;
+      color: var(--rose);
+    }
+
+    .whisper.pop {
+      animation: pop 0.45s ease;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 14px;
+    }
+
+    button {
+      font-family: inherit;
+      border: none;
+      cursor: pointer;
+      border-radius: 999px;
+      padding: 14px 22px;
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    button:focus-visible, a:focus-visible {
+      outline: 3px solid #ffd0e0;
+      outline-offset: 3px;
+    }
+
+    #open, #hug {
+      background: linear-gradient(180deg, #ff8aab, #e85a84);
+      color: white;
+      box-shadow: 0 10px 20px rgba(232, 90, 132, 0.28);
+    }
+
+    #open:hover, #hug:hover { transform: translateY(-1px); }
+
+    #song, #again {
+      background: white;
+      color: var(--ink);
+      border: 1px solid rgba(232, 90, 132, 0.25);
+    }
+
+    .letter {
+      display: none;
+      text-align: left;
+      margin-top: 22px;
+      background: var(--paper);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      border-radius: 28px;
+      padding: 22px 22px 18px;
+      box-shadow: 0 16px 40px rgba(180, 90, 120, 0.12);
+      backdrop-filter: blur(8px);
+    }
+
+    body.open .letter {
+      display: block;
+      animation: rise 0.8s ease both;
+      animation-delay: 0.7s;
+    }
+
+    .letter h2 {
+      font-family: "Caveat", cursive;
+      font-size: 2.2rem;
+      margin: 0 0 8px;
+    }
+
+    .letter p {
+      margin: 0 0 12px;
+      line-height: 1.6;
+      font-size: 1.02rem;
+    }
+
+    .sign {
+      font-family: "Caveat", cursive;
+      font-size: 1.8rem;
+      margin: 4px 0 0;
+    }
+
+    .petal {
+      position: absolute;
+      top: -30px;
+      width: 12px;
+      height: 16px;
+      background: radial-gradient(circle at 30% 30%, #fff, var(--c, #f48aaa));
+      border-radius: 80% 0 80% 0;
+      animation: fall linear infinite;
+      opacity: 0.85;
+    }
+
+    .heart {
+      position: absolute;
+      bottom: -20px;
+      font-size: 18px;
+      animation: riseheart linear forwards;
+    }
+
+    .spark {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: white;
+      box-shadow: 0 0 10px #fff;
+      animation: spark 0.9s ease-out forwards;
+    }
+
+    .butterfly {
+      position: absolute;
+      width: 22px;
+      height: 16px;
+      animation: fly 16s linear infinite;
+    }
+
+    .butterfly::before, .butterfly::after {
+      content: "";
+      position: absolute;
+      width: 12px;
+      height: 14px;
+      background: #ffb3c7;
+      border-radius: 60% 40% 60% 40%;
+      top: 0;
+    }
+
+    .butterfly::before { left: 0; animation: wing 0.35s ease-in-out infinite; }
+    .butterfly::after { right: 0; animation: wing 0.35s ease-in-out infinite reverse; background: #ffd0e0; }
+
+    .hugged svg { animation: squeeze 0.7s ease; }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    @keyframes bloom {
+      0% { transform: scale(0) rotate(-14deg); opacity: 0; }
+      70% { opacity: 1; }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+
+    @keyframes sway {
+      0%, 100% { transform: rotate(-2.4deg); }
+      50% { transform: rotate(2.4deg); }
+    }
+
+    @keyframes draw { to { stroke-dashoffset: 0; } }
+    @keyframes fadein { to { opacity: 1; } }
+    @keyframes hidebud { to { opacity: 0; transform: scale(0.4) translateY(12px); } }
+
+    @keyframes fall {
+      0% { transform: translate3d(0, 0, 0) rotate(0deg); }
+      100% { transform: translate3d(var(--dx, 20px), 110vh, 0) rotate(360deg); }
+    }
+
+    @keyframes drift {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-18px); }
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: none; }
+    }
+
+    @keyframes pop {
+      0% { transform: scale(0.8); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes riseheart {
+      to { transform: translateY(-105vh) scale(1.2); opacity: 0; }
+    }
+
+    @keyframes spark {
+      to { transform: translate(var(--x), var(--y)) scale(0.2); opacity: 0; }
+    }
+
+    @keyframes fly {
+      0% { transform: translate(8vw, 70vh) rotate(8deg); }
+      50% { transform: translate(78vw, 18vh) rotate(-8deg); }
+      100% { transform: translate(10vw, 40vh) rotate(6deg); }
+    }
+
+    @keyframes wing {
+      50% { transform: scaleX(0.45); }
+    }
+
+    @keyframes squeeze {
+      0%, 100% { transform: translateY(0) scale(1); }
+      40% { transform: translateY(6px) scale(0.94, 1.04); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+      .bloom, .stem, .leaf, .breath, .letter { opacity: 1; transform: none; }
+      .bud { display: none; }
+      .letter { display: block; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bokeh" id="bokeh"></div>
+  <div class="petals" id="petals"></div>
+  <div class="butterflies" id="butterflies"></div>
+  <div class="hearts" id="hearts"></div>
+
+  <main>
+    <a class="back" href="index.html">← wróć do nas</a>
+    <p class="eyebrow">tylko dla Ciebie</p>
+    <h1>Przepraszam, Króliczku</h1>
+    <p class="lead" id="lead">Schowałem tu cały ogród. Otwórz go, jest tylko Twój.</p>
+
+    <div class="stage">
+      <div class="bouquet" id="bouquet"></div>
+    </div>
+
+    <p class="whisper" id="whisper" aria-live="polite"></p>
+
+    <div class="actions">
+      <button id="open" type="button">Otwórz bukiet</button>
+    </div>
+
+    <article class="letter" id="letter">
+      <h2>Moja Julia</h2>
+      <p>Bombelku, przepraszam Cię za wszystko. Za słowa, które wyszły za ostre. Za chwile, w których byłem daleko, choć stałem obok. Za każdy raz, kiedy moja Kruszynka musiała zgadywać, czy jest ważna.</p>
+      <p>Jesteś. Najważniejsza. Mój króliczek, mój dom, całe miękkie miejsce na świecie.</p>
+      <p>Ten bukiet nie zwiędnie w wazonie. Jest z przeprosin i z tego, jak bardzo Cię kocham. Dotknij kwiatka, a powie Ci jedno ciche zdanie.</p>
+      <p>Zostaję, Cutie. Na dobre dni, na ciche dni i na te, w których trzeba jeszcze raz powiedzieć „przepraszam”.</p>
+      <p class="sign">Twój Konras ♡</p>
+    </article>
+  </main>
+
+  <script>
+    const flowers = [
+      { type: "rose", x: 200, y: 78, s: 0.72, d: 0.55, note: "najdroższa", colors: ["#ffd0e0", "#f48aaa", "#e25b78"] },
+      { type: "tulip", x: 74, y: 168, s: 1, d: 0.08, note: "zostaję", colors: ["#ffc2d4", "#f26d92"] },
+      { type: "tulip", x: 328, y: 158, s: 0.96, d: 0.16, note: "mój dom", colors: ["#ffe0ea", "#e85a84"] },
+      { type: "rose", x: 126, y: 128, s: 1.02, d: 0.28, note: "przepraszam", colors: ["#ffd6e4", "#f284a3", "#d94b73"] },
+      { type: "rose", x: 282, y: 122, s: 1.06, d: 0.36, note: "kocham Cię", colors: ["#fff0f4", "#ff8aab", "#e4567f"] },
+      { type: "daisy", x: 148, y: 228, s: 0.86, d: 0.62, note: "króliczku", colors: ["#fffaf8", "#ffd56a"] },
+      { type: "daisy", x: 262, y: 220, s: 0.8, d: 0.7, note: "na zawsze", colors: ["#fff", "#ffc857"] },
+      { type: "peony", x: 200, y: 172, s: 1.22, d: 0.46, note: "jesteś cudem", colors: ["#ffe4ee", "#ff9ebb", "#e85a84"] }
+    ];
+
+    const bouquet = document.getElementById("bouquet");
+    const whisper = document.getElementById("whisper");
+    const lead = document.getElementById("lead");
+    const openBtn = document.getElementById("open");
+    const actions = document.querySelector(".actions");
+
+    function rosePetals(colors) {
+      const layers = [
+        { n: 7, rx: 16, ry: 26, dist: 10, color: colors[0] },
+        { n: 6, rx: 12, ry: 18, dist: 6, color: colors[1] },
+        { n: 5, rx: 8, ry: 12, dist: 2, color: colors[2] }
+      ];
+      let svg = "";
+      layers.forEach((layer, li) => {
+        for (let i = 0; i < layer.n; i++) {
+          const a = (360 / layer.n) * i + li * 16;
+          svg += `<ellipse cx="0" cy="${-layer.dist}" rx="${layer.rx}" ry="${layer.ry}" fill="${layer.color}" transform="rotate(${a})" />`;
+        }
+      });
+      svg += `<circle r="7" fill="${colors[2]}" /><circle r="3.2" fill="#fff7f8" />`;
+      return svg;
+    }
+
+    function peonyPetals(colors) {
+      let svg = "";
+      [0, 18, 36].forEach((offset, li) => {
+        const n = 11 - li * 2;
+        const rx = 24 - li * 6;
+        const ry = 16 - li * 2;
+        for (let i = 0; i < n; i++) {
+          const a = (360 / n) * i + offset;
+          svg += `<ellipse cx="0" cy="${-6 - li * 2}" rx="${rx}" ry="${ry}" fill="${colors[li]}" transform="rotate(${a})" />`;
+        }
+      });
+      svg += `<circle r="11" fill="${colors[2]}" /><circle r="5" fill="#fff4f7" />`;
+      return svg;
+    }
+
+    function tulipPetals(colors) {
+      return `
+        <path d="M0 20 C -18 8, -20 -18, 0 -34 C 20 -18, 18 8, 0 20 Z" fill="${colors[0]}"/>
+        <path d="M0 16 C -10 6, -8 -14, 0 -28 C 1 -8, -1 8, 0 16 Z" fill="${colors[1]}" opacity="0.85"/>
+        <path d="M0 16 C 10 6, 8 -14, 0 -28 C -1 -8, 1 8, 0 16 Z" fill="${colors[1]}" opacity="0.7"/>
+        <path d="M-5 14 C -1 2, 0 -8, 0 0 C 0 -8, 1 2, 5 14 Z" fill="#c4476c" opacity="0.28"/>
+      `;
+    }
+
+    function daisyPetals(colors) {
+      let svg = "";
+      for (let i = 0; i < 14; i++) {
+        svg += `<ellipse cx="0" cy="-16" rx="6" ry="14" fill="${colors[0]}" transform="rotate(${(360 / 14) * i})" />`;
+      }
+      svg += `<circle r="9" fill="${colors[1]}" /><circle r="3.5" fill="#f0b429" />`;
+      return svg;
+    }
+
+    function flowerBody(f) {
+      if (f.type === "rose") return rosePetals(f.colors);
+      if (f.type === "peony") return peonyPetals(f.colors);
+      if (f.type === "tulip") return tulipPetals(f.colors);
+      return daisyPetals(f.colors);
+    }
+
+    function stemPath(f) {
+      const y = f.y + 24 * f.s;
+      const cpx = (f.x + 200) / 2;
+      const cpy = y + 70;
+      return `M ${f.x} ${y} Q ${cpx} ${cpy}, 200 348`;
+    }
+
+    function buildBouquet() {
+      const stems = flowers.map((f) => `
+        <path class="stem" style="--d:${f.d}s" d="${stemPath(f)}" fill="none" stroke="#3d6848" stroke-width="3.2" stroke-linecap="round"/>
+      `).join("");
+
+      const leaves = flowers.map((f, i) => {
+        const x = (f.x + 200) / 2 + (i % 2 ? 10 : -8);
+        const y = f.y + 78;
+        const rot = f.x < 200 ? -32 : 32;
+        return `<ellipse class="leaf" style="--d:${f.d}s" cx="${x}" cy="${y}" rx="18" ry="7" fill="${i % 2 ? "#7eae80" : "#5d8b64"}" transform="rotate(${rot} ${x} ${y})"/>`;
+      }).join("");
+
+      const breath = Array.from({ length: 22 }, (_, i) => {
+        const angle = (Math.PI * 2 * i) / 22;
+        const x = 200 + Math.cos(angle) * (70 + (i % 5) * 16);
+        const y = 170 + Math.sin(angle) * (48 + (i % 4) * 14);
+        const delay = (0.2 + (i % 7) * 0.08).toFixed(2);
+        return `<circle class="breath" style="--d:${delay}s" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${1.6 + (i % 3)}" fill="#fff" opacity="0"/>`;
+      }).join("");
+
+      const blooms = flowers.map((f) => `
+        <g transform="translate(${f.x} ${f.y}) scale(${f.s})">
+          <g class="sway" style="--d:${f.d}s">
+            <g class="bloom" style="--d:${f.d}s" data-note="${f.note}">
+              ${flowerBody(f)}
+            </g>
+          </g>
+        </g>
+      `).join("");
+
+      const bud = `
+        <g class="bud" transform="translate(200 292) scale(0.78)">
+          ${rosePetals(["#ffd0e0", "#f284a3", "#e25b78"])}
+        </g>
+      `;
+
+      const paper = `
+        <path d="M118 318 C108 380, 146 452, 200 478 C254 452, 292 380, 282 318 C246 346, 154 346, 118 318 Z" fill="#fff8f3" stroke="#f4c9d6" stroke-width="2"/>
+        <path d="M132 328 C150 352, 250 352, 268 328" fill="none" stroke="#f7d5e0" stroke-width="3"/>
+      `;
+
+      const bow = `
+        <g transform="translate(200 336)">
+          <g class="bow">
+            <ellipse cx="-26" cy="2" rx="26" ry="15" fill="#f48aaa"/>
+            <ellipse cx="26" cy="2" rx="26" ry="15" fill="#e56b8c"/>
+            <ellipse cx="-26" cy="2" rx="12" ry="7" fill="#ffd0e0" opacity="0.7"/>
+            <ellipse cx="26" cy="2" rx="12" ry="7" fill="#ffd0e0" opacity="0.55"/>
+            <circle r="8" fill="#fff7f4"/>
+            <path d="M-6 8 C -34 36, -8 62, -28 92" stroke="#f28aaa" stroke-width="7" fill="none" stroke-linecap="round"/>
+            <path d="M6 8 C 36 40, 12 66, 30 94" stroke="#e56b8c" stroke-width="7" fill="none" stroke-linecap="round"/>
+          </g>
+        </g>
+      `;
+
+      bouquet.innerHTML = `
+        <svg viewBox="0 0 400 520" role="img" aria-label="Wirtualny bukiet róż, tulipanów, stokrotek i piwonii">
+          ${stems}
+          ${leaves}
+          ${paper}
+          ${bow}
+          ${breath}
+          ${blooms}
+          ${bud}
+        </svg>
+      `;
+    }
+
+    function sprinkle(count, colors) {
+      const box = document.getElementById("petals");
+      for (let i = 0; i < count; i++) {
+        const petal = document.createElement("span");
+        petal.className = "petal";
+        const left = Math.random() * 100;
+        const duration = 8 + Math.random() * 9;
+        const delay = -Math.random() * duration;
+        const size = 10 + Math.random() * 10;
+        petal.style.left = left + "%";
+        petal.style.width = size + "px";
+        petal.style.height = size * 1.3 + "px";
+        petal.style.setProperty("--c", colors[i % colors.length]);
+        petal.style.setProperty("--dx", (Math.random() * 80 - 40) + "px");
+        petal.style.animationDuration = duration + "s";
+        petal.style.animationDelay = delay + "s";
+        box.appendChild(petal);
+      }
+    }
+
+    function bokeh() {
+      const box = document.getElementById("bokeh");
+      const colors = ["#ffd6e4", "#ffe8c4", "#fff", "#ffc2d4"];
+      for (let i = 0; i < 8; i++) {
+        const orb = document.createElement("span");
+        orb.className = "orb";
+        orb.style.width = orb.style.height = 80 + Math.random() * 140 + "px";
+        orb.style.left = Math.random() * 100 + "%";
+        orb.style.top = Math.random() * 100 + "%";
+        orb.style.background = colors[i % colors.length];
+        orb.style.animationDelay = (-Math.random() * 8) + "s";
+        box.appendChild(orb);
+      }
+    }
+
+    function butterflies() {
+      const box = document.getElementById("butterflies");
+      for (let i = 0; i < 3; i++) {
+        const bug = document.createElement("span");
+        bug.className = "butterfly";
+        bug.style.animationDelay = (-i * 5) + "s";
+        bug.style.animationDuration = 14 + i * 3 + "s";
+        box.appendChild(bug);
+      }
+    }
+
+    function burst() {
+      const stage = document.querySelector(".stage");
+      const rect = stage.getBoundingClientRect();
+      for (let i = 0; i < 28; i++) {
+        const spark = document.createElement("span");
+        spark.className = "spark";
+        spark.style.left = rect.width / 2 + "px";
+        spark.style.top = "46%";
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 40 + Math.random() * 120;
+        spark.style.setProperty("--x", Math.cos(angle) * dist + "px");
+        spark.style.setProperty("--y", Math.sin(angle) * dist + "px");
+        spark.style.background = ["#fff", "#ffd6e4", "#ffe7a3"][i % 3];
+        stage.appendChild(spark);
+        spark.addEventListener("animationend", () => spark.remove());
+      }
+    }
+
+    function hearts(n) {
+      const box = document.getElementById("hearts");
+      for (let i = 0; i < n; i++) {
+        const heart = document.createElement("span");
+        heart.className = "heart";
+        heart.textContent = ["♡", "♥", "✿"][i % 3];
+        heart.style.left = Math.random() * 100 + "%";
+        heart.style.animationDuration = 4 + Math.random() * 3 + "s";
+        heart.style.fontSize = 14 + Math.random() * 16 + "px";
+        heart.style.color = ["#e85a84", "#f48aaa", "#ffb3c7"][i % 3];
+        box.appendChild(heart);
+        heart.addEventListener("animationend", () => heart.remove());
+      }
+    }
+
+    let heartTimer = null;
+    let audioCtx = null;
+    let songTimer = null;
+    let playing = false;
+
+    function openBouquet() {
+      bouquet.classList.remove("open");
+      document.body.classList.remove("open");
+      void bouquet.offsetWidth;
+      bouquet.classList.add("open");
+      document.body.classList.add("open");
+      lead.textContent = "Dla Ciebie. Dotknij płatka, jeśli chcesz usłyszeć, co ma do powiedzenia.";
+      whisper.textContent = "rozkwita specjalnie dla Ciebie";
+      whisper.classList.remove("pop");
+      void whisper.offsetWidth;
+      whisper.classList.add("pop");
+      burst();
+      hearts(14);
+      if (!heartTimer) {
+        heartTimer = setInterval(() => hearts(2), 1400);
+      }
+      if (!document.getElementById("again")) {
+        openBtn.remove();
+        actions.innerHTML = `
+          <button id="hug" type="button">Przytul bukiet</button>
+          <button id="song" type="button">Cichutka melodyjka</button>
+          <button id="again" type="button">Rozwiń jeszcze raz</button>
+        `;
+        document.getElementById("hug").addEventListener("click", hug);
+        document.getElementById("song").addEventListener("click", toggleSong);
+        document.getElementById("again").addEventListener("click", openBouquet);
+      }
+    }
+
+    function hug() {
+      bouquet.classList.remove("hugged");
+      void bouquet.offsetWidth;
+      bouquet.classList.add("hugged");
+      hearts(18);
+      whisper.textContent = "przytulam Cię, Króliczku";
+      whisper.classList.remove("pop");
+      void whisper.offsetWidth;
+      whisper.classList.add("pop");
+    }
+
+    function toggleSong() {
+      const button = document.getElementById("song");
+      if (playing) {
+        stopSong();
+        button.textContent = "Cichutka melodyjka";
+        return;
+      }
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      audioCtx = audioCtx || new AudioContext();
+      const notes = [523.25, 587.33, 659.25, 783.99, 659.25, 587.33, 698.46, 523.25];
+      const start = audioCtx.currentTime + 0.05;
+      notes.forEach((freq, i) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = "triangle";
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0, start + i * 0.42);
+        gain.gain.linearRampToValueAtTime(0.045, start + i * 0.42 + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + i * 0.42 + 0.4);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(start + i * 0.42);
+        osc.stop(start + i * 0.42 + 0.42);
+      });
+      playing = true;
+      button.textContent = "Wystarczy, dziękuję";
+      clearTimeout(songTimer);
+      songTimer = setTimeout(() => {
+        playing = false;
+        if (document.getElementById("song")) {
+          document.getElementById("song").textContent = "Cichutka melodyjka";
+        }
+      }, notes.length * 420 + 200);
+    }
+
+    function stopSong() {
+      playing = false;
+      clearTimeout(songTimer);
+      if (audioCtx) {
+        audioCtx.close();
+        audioCtx = null;
+      }
+    }
+
+    bouquet.addEventListener("click", (event) => {
+      const bloom = event.target.closest(".bloom");
+      if (!bloom || !bouquet.classList.contains("open")) return;
+      whisper.textContent = bloom.dataset.note;
+      whisper.classList.remove("pop");
+      void whisper.offsetWidth;
+      whisper.classList.add("pop");
+      hearts(4);
+    });
+
+    let lastTrail = 0;
+    window.addEventListener("pointermove", (event) => {
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      const now = performance.now();
+      if (now - lastTrail < 90) return;
+      lastTrail = now;
+      const petal = document.createElement("span");
+      petal.className = "petal";
+      petal.style.left = event.clientX + "px";
+      petal.style.top = event.clientY + "px";
+      petal.style.position = "fixed";
+      petal.style.setProperty("--c", "#f7b3c8");
+      petal.style.setProperty("--dx", "12px");
+      petal.style.animationDuration = "2.8s";
+      document.body.appendChild(petal);
+      petal.addEventListener("animationend", () => petal.remove());
+    });
+
+    buildBouquet();
+    bokeh();
+    sprinkle(18, ["#f48aaa", "#ffd0e0", "#ffb7c5", "#ffe0b5"]);
+    butterflies();
+    openBtn.addEventListener("click", openBouquet);
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      bouquet.classList.add("open");
+      document.body.classList.add("open");
+      lead.textContent = "Dla Ciebie. Dotknij płatka, jeśli chcesz usłyszeć, co ma do powiedzenia.";
+    }
+  </script>
+</body>
+</html>
